@@ -166,13 +166,19 @@ export default function RoiPage() {
     setDrivers(next)
   }, [mode, selectedId, diagnostics])
 
-  // Computed totals. Mid case is the slider-driven number; low and high
-  // bracket it by scaling each driver's recovery rate by 0.6 / 1.2 (high
-  // capped at the per-driver ceiling). Cost stays constant across cases.
+  // Computed totals. The new £0-default model: drivers carry no cost,
+  // orchestration overlay reduces gross recovery to net (recurring),
+  // advisory overlay is the only one-off. Mid case drives the headline
+  // numbers; low and high bracket the recovery rate by ±0.6 / ×1.2
+  // (capped at each driver's ceiling). Implementation cost equals the
+  // advisory fee; ROI / payback only resolve to numbers when a one-off
+  // is present.
   const totals = useMemo(() => {
-    const totalCost = drivers.reduce((sum, d) => sum + d.implementationCost, 0)
+    const orchAnnual = orchestrationCost ?? 0
+    const oneOffCost = advisoryFee ?? 0
+    const hasAnyCost = orchestrationCost !== null || advisoryFee !== null
 
-    const annualForFactor = (factor: number) =>
+    const grossAnnualForFactor = (factor: number) =>
       drivers.reduce((sum, d) => {
         const rate = factor === 1
           ? d.recoveryRate
@@ -181,14 +187,19 @@ export default function RoiPage() {
       }, 0)
 
     const buildCase = (factor: number) => {
-      const annualRecoverable = annualForFactor(factor)
-      const periodRecoverable = annualRecoverable * (timeframeMonths / 12)
-      const monthlyRecoverable = annualRecoverable / 12
+      const grossAnnual = grossAnnualForFactor(factor)
+      const netAnnual = Math.max(0, grossAnnual - orchAnnual)
+      const periodRecoverable = netAnnual * (timeframeMonths / 12)
+      const monthlyRecoverable = netAnnual / 12
       return {
-        annualRecoverable,
+        grossAnnual,
+        netAnnual,
+        annualRecoverable: netAnnual,
         periodRecoverable,
-        roiMultiple: totalCost > 0 ? periodRecoverable / totalCost : null,
-        paybackWeeks: monthlyRecoverable > 0 ? (totalCost / monthlyRecoverable) * (52 / 12) : null,
+        roiMultiple: oneOffCost > 0 ? periodRecoverable / oneOffCost : null,
+        paybackWeeks: oneOffCost > 0 && monthlyRecoverable > 0
+          ? (oneOffCost / monthlyRecoverable) * (52 / 12)
+          : null,
       }
     }
 
@@ -196,17 +207,25 @@ export default function RoiPage() {
     const mid = buildCase(1)
     const high = buildCase(1.2)
 
+    const grossPeriod = mid.grossAnnual * (timeframeMonths / 12)
+
     return {
-      annualRecoverable: mid.annualRecoverable,
-      totalCost,
+      annualRecoverable: mid.netAnnual,
+      grossAnnualRecoverable: mid.grossAnnual,
+      grossPeriodRecoverable: grossPeriod,
+      netAnnualRecoverable: mid.netAnnual,
+      totalCost: oneOffCost,
+      orchAnnual,
+      oneOffCost,
+      hasAnyCost,
       periodRecoverable: mid.periodRecoverable,
-      netGain: mid.periodRecoverable - totalCost,
+      netGain: mid.periodRecoverable - oneOffCost,
       roiMultiple: mid.roiMultiple,
       paybackWeeks: mid.paybackWeeks,
       low,
       high,
     }
-  }, [drivers, timeframeMonths])
+  }, [drivers, timeframeMonths, orchestrationCost, advisoryFee])
 
   // Driver mutations
   const updateDriver = (id: string, patch: Partial<Driver>) => {
@@ -440,26 +459,46 @@ export default function RoiPage() {
               {fmtCurrency(totals.low.periodRecoverable)}–{fmtCurrency(totals.high.periodRecoverable)} range
             </div>
           </div>
-          {totals.totalCost > 0 ? (
+          {totals.hasAnyCost ? (
             <>
               <div className="kpi-card">
                 <div className="kpi-label">Implementation cost</div>
-                <div className="kpi-value">{fmtCurrency(totals.totalCost)}</div>
-                <div className="text-[10.5px] text-ink/45 mt-1">One-off</div>
-              </div>
-              <div className="kpi-card">
-                <div className="kpi-label">ROI multiple</div>
-                <div className="kpi-value">{totals.roiMultiple != null ? `${totals.roiMultiple.toFixed(1)}x` : '—'}</div>
+                <div className="kpi-value">{fmtCurrency(totals.oneOffCost)}</div>
                 <div className="text-[10.5px] text-ink/45 mt-1">
-                  {totals.roiMultiple != null && totals.low.roiMultiple != null && totals.high.roiMultiple != null
-                    ? `${totals.low.roiMultiple.toFixed(1)}x – ${totals.high.roiMultiple.toFixed(1)}x range`
-                    : 'Period return ÷ cost'}
+                  {totals.orchAnnual > 0 ? `One-off, plus ${fmtCurrency(totals.orchAnnual)}/yr` : 'One-off'}
                 </div>
               </div>
               <div className="kpi-card">
+                <div className="kpi-label">ROI multiple</div>
+                {totals.oneOffCost > 0 ? (
+                  <>
+                    <div className="kpi-value">{totals.roiMultiple != null ? `${totals.roiMultiple.toFixed(1)}x` : '—'}</div>
+                    <div className="text-[10.5px] text-ink/45 mt-1">
+                      {totals.low.roiMultiple != null && totals.high.roiMultiple != null
+                        ? `${totals.low.roiMultiple.toFixed(1)}x – ${totals.high.roiMultiple.toFixed(1)}x range`
+                        : 'Period return ÷ cost'}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="kpi-value text-[16px]">Pure recovery (after fees)</div>
+                    <div className="text-[10.5px] text-ink/45 mt-1">{fmtCurrency(totals.orchAnnual)}/yr orchestration</div>
+                  </>
+                )}
+              </div>
+              <div className="kpi-card">
                 <div className="kpi-label">Payback</div>
-                <div className="kpi-value">{formatPayback(totals.paybackWeeks).primary}</div>
-                <div className="text-[10.5px] text-ink/45 mt-1">{formatPayback(totals.paybackWeeks).secondary}</div>
+                {totals.oneOffCost > 0 ? (
+                  <>
+                    <div className="kpi-value">{formatPayback(totals.paybackWeeks).primary}</div>
+                    <div className="text-[10.5px] text-ink/45 mt-1">{formatPayback(totals.paybackWeeks).secondary}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="kpi-value text-[18px]">Immediately</div>
+                    <div className="text-[10.5px] text-ink/45 mt-1">No one-off cost</div>
+                  </>
+                )}
               </div>
             </>
           ) : (
@@ -582,7 +621,6 @@ export default function RoiPage() {
                 <th>Driver</th>
                 <th className="text-right">Annual loss</th>
                 <th>Recovery rate</th>
-                {totals.totalCost > 0 && <th className="text-right">Implementation cost</th>}
                 <th className="text-right">Net annual</th>
                 {mode === 'manual' && <th></th>}
               </tr>
@@ -647,19 +685,8 @@ export default function RoiPage() {
                         <div className="text-[10px] text-ink/40 mt-0.5">Capped at {matchedCeiling}%, industry-realistic for this driver</div>
                       )}
                     </td>
-                    {totals.totalCost > 0 && (
-                      <td className="text-right">
-                        <input
-                          type="number"
-                          className="input py-1 text-[12px] text-right font-mono w-32 ml-auto"
-                          value={d.implementationCost || ''}
-                          onChange={e => updateDriver(d.id, { implementationCost: Number(e.target.value) || 0 })}
-                          placeholder="0"
-                        />
-                      </td>
-                    )}
                     <td className={`text-right font-mono font-medium ${recoverable >= 0 ? 'text-brand-green' : 'text-brand-red'}`}>
-                      {fmtCurrency(totals.totalCost > 0 ? netAnnual : recoverable)}
+                      {fmtCurrency(recoverable)}
                     </td>
                     {mode === 'manual' && (
                       <td className="text-right">
@@ -672,7 +699,7 @@ export default function RoiPage() {
                 )
               })}
               {drivers.length === 0 && (
-                <tr><td colSpan={(totals.totalCost > 0 ? 5 : 4) + (mode === 'manual' ? 1 : 0)} className="text-center text-ink/40 py-6">No drivers, {mode === 'manual' ? 'add one above' : 'select a diagnostic'}.</td></tr>
+                <tr><td colSpan={4 + (mode === 'manual' ? 1 : 0)} className="text-center text-ink/40 py-6">No drivers, {mode === 'manual' ? 'add one above' : 'select a diagnostic'}.</td></tr>
               )}
             </tbody>
           </table>
