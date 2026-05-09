@@ -11,6 +11,18 @@ from app.api.routes import auth, diagnostics, files, admin, benchmarks, intel, r
 async def lifespan(app: FastAPI):
     # Startup
     print(f"Revelio API starting — environment: {settings.ENVIRONMENT}")
+
+    # Auto-create tables on first boot (early-stage; replace with Alembic migrations in production)
+    if settings.ENVIRONMENT in ("production", "development"):
+        try:
+            # Import models so they register against Base.metadata
+            from app.models import user  # noqa: F401
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            print("Database tables ensured")
+        except Exception as e:
+            print(f"Warning: table creation failed: {e}")
+
     yield
     # Shutdown
     print("Revelio API shutting down")

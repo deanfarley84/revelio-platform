@@ -1,0 +1,171 @@
+# ─── Revelio Platform — Render Blueprint ──────────────────
+# Full-stack deploy:
+#   - revelio-frontend  (Next.js, public)
+#   - revelio-backend   (FastAPI, public)
+#   - revelio-worker    (Celery, background)
+#   - revelio-beat      (Celery scheduler, background)
+#   - revelio-db        (managed Postgres)
+#   - revelio-redis     (managed Redis, broker + result backend)
+#   - revelio-shared    (env group with shared secrets)
+#
+# After first deploy, set these in the Render dashboard:
+#
+#   ENV GROUP "revelio-shared":
+#     - ANTHROPIC_API_KEY    (production key)
+#     - AWS_ACCESS_KEY_ID    (only if S3 enabled)
+#     - AWS_SECRET_ACCESS_KEY
+#
+#   SERVICE "revelio-backend":
+#     - CORS_ORIGINS         (e.g. ["https://revelio-frontend.onrender.com"])
+#
+#   SERVICE "revelio-frontend":
+#     - NEXT_PUBLIC_API_URL  (e.g. https://revelio-backend.onrender.com)
+#
+# Free tier notes:
+#   - Postgres free tier expires after 90 days; upgrade before then.
+#   - Web services on free tier sleep after 15 mins idle.
+#   - Workers don't sleep but use compute hours.
+
+# ─── Shared env group ──────────────────────────────────────
+envVarGroups:
+  - name: revelio-shared
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-4-20250514
+      - key: AI_PROMPT_VERSION
+        value: v1.0
+      - key: DIAGNOSTIC_REF_PREFIX
+        value: RVL
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_BUCKET
+        value: revelio-files
+      - key: AWS_REGION
+        value: eu-west-2
+
+databases:
+  - name: revelio-db
+    plan: free
+    databaseName: revelio
+    user: revelio
+
+services:
+  # ─── Redis (broker + result backend) ───────────────────
+  - type: redis
+    name: revelio-redis
+    plan: free
+    ipAllowList: []   # private network only
+    maxmemoryPolicy: allkeys-lru
+
+  # ─── Backend API (FastAPI) ─────────────────────────────
+  - type: web
+    name: revelio-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - fromGroup: revelio-shared
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: PORT
+        value: "8000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: revelio-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: revelio-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRE_MINUTES
+        value: "10080"
+      - key: CORS_ORIGINS
+        sync: false   # set after frontend URL is known
+
+  # ─── Celery worker ─────────────────────────────────────
+  - type: worker
+    name: revelio-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2 -Q default,file_parsing,ai_analysis,report_generation
+    plan: free
+    autoDeploy: true
+    envVars:
+      - fromGroup: revelio-shared
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: revelio-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: revelio-redis
+          property: connectionString
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: revelio-backend
+          envVarKey: JWT_SECRET
+
+  # ─── Celery beat (scheduler) ───────────────────────────
+  - type: worker
+    name: revelio-beat
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: celery -A app.workers.celery_app beat --loglevel=info
+    plan: free
+    autoDeploy: true
+    envVars:
+      - fromGroup: revelio-shared
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: revelio-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: revelio-redis
+          property: connectionString
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: revelio-backend
+          envVarKey: JWT_SECRET
+
+  # ─── Frontend (Next.js) ────────────────────────────────
+  - type: web
+    name: revelio-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    plan: free
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: NEXT_PUBLIC_API_URL
+        sync: false   # set after backend deploys → https://revelio-backend.onrender.com

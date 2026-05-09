@@ -261,7 +261,7 @@ def send_notification(notification_type: str, context: dict):
                     type=notification_type,
                     title=tmpl["title"],
                     body=tmpl["body"],
-                    metadata=context,
+                    extra_metadata=context,
                 )
                 db.add(notif)
 

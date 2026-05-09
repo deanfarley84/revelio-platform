@@ -24,7 +24,7 @@ async def list_notifications(
     return [
         {
             "id": str(n.id), "type": n.type, "title": n.title,
-            "body": n.body, "read": n.read, "metadata": n.metadata,
+            "body": n.body, "read": n.read, "metadata": n.extra_metadata,
             "created_at": n.created_at.isoformat() if n.created_at else None,
         }
         for n in result.scalars().all()

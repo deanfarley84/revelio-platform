@@ -210,7 +210,7 @@ class Notification(Base):
     type = Column(Text, nullable=False)
     title = Column(Text, nullable=False)
     body = Column(Text)
-    metadata = Column(JSONB)
+    extra_metadata = Column("metadata", JSONB)  # 'metadata' is reserved on DeclarativeBase; map to a safe attr name
     read = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
