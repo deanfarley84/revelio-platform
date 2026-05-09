@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import AppShell from '@/components/layout/AppShell'
 import { diagnosticsApi, fmtCurrency } from '@/lib/api'
-import { Calculator, FileText, Plus, Trash2, Copy, Check, X, Info } from 'lucide-react'
+import { Calculator, FileText, Plus, Trash2, Copy, Check, X, Info, TrendingUp } from 'lucide-react'
 
 type Mode = 'diagnostic' | 'manual'
 
@@ -355,6 +355,22 @@ export default function RoiPage() {
             </div>
           )}
         </div>
+
+        {/* Cost of inaction framing. Hidden when there is nothing to model. */}
+        {totals.periodRecoverable > 0 && (
+          <div className="card mb-4">
+            <div className="flex items-start gap-3">
+              <TrendingUp size={14} className="text-ink/55 mt-0.5 shrink-0" />
+              <div>
+                <div className="kpi-label mb-1">Cost of inaction</div>
+                <div className="text-[13px] text-ink/85 leading-relaxed">
+                  Over the next {timeframeMonths} months, doing nothing leaves <span className="font-medium">{fmtCurrency(totals.periodRecoverable)}</span> on the table.
+                  One-off implementation of <span className="font-medium">{fmtCurrency(totals.totalCost)}</span> recovers <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.totalCost)}</span> over that period.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Summary bar (KPIs) */}
         <div className="grid grid-cols-4 gap-3 mb-4">
