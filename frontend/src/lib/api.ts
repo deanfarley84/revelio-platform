@@ -35,6 +35,8 @@ export const authApi = {
     api.post('/auth/login', { email, password }),
   me: () => api.get('/auth/me'),
   register: (payload: any) => api.post('/auth/register-org', payload),
+  bootstrap: (payload: { email: string; password: string; full_name: string; org_name?: string }) =>
+    api.post('/auth/bootstrap', payload),
 }
 
 // ── Diagnostics ───────────────────────────────────────────
@@ -43,6 +45,7 @@ export const diagnosticsApi = {
   get: (id: string) => api.get(`/diagnostics/${id}`),
   create: (payload: any) => api.post('/diagnostics', payload),
   submit: (id: string) => api.post(`/diagnostics/${id}/submit`),
+  status: (id: string) => api.get(`/diagnostics/${id}/status`),
   approve: (id: string, payload: any) => api.post(`/diagnostics/${id}/approve`, payload),
   reject: (id: string, payload: any) => api.post(`/diagnostics/${id}/reject`, payload),
 }

@@ -1,29 +1,48 @@
-# Revelio — Payments Revenue Leakage Diagnostic Platform
+# Revelio - Payments Revenue Leakage Diagnostic Platform
 
 Multi-tenant SaaS platform for identifying hidden revenue loss in payment infrastructure. Powered by Claude AI.
 
 ---
 
-## Quick start
+## Quick start (local Docker demo)
 
 ```bash
 # 1. Configure
-cp .env.example .env
-# Edit .env — set ANTHROPIC_API_KEY, POSTGRES_PASSWORD, JWT_SECRET
+cp backend/.env.example backend/.env
+# Edit backend/.env - set ANTHROPIC_API_KEY (placeholder works for boot;
+# only /diagnostics/{id}/submit needs a real key).
 
 # 2. Start all services
-docker-compose up --build
+docker-compose -f docker-compose.demo.yml up --build
 
-# 3. Seed database (in new terminal, after ~30s)
-pip install psycopg2-binary passlib[bcrypt] python-dotenv
-python scripts/setup.py
+# 3. Seed full demo data (in a new terminal, after ~30s)
+docker compose -f docker-compose.demo.yml exec backend python demo/seed_demo.py
 
 # 4. Open browser
 open http://localhost:3000
 ```
 
-**Admin login:** `admin@revelio.io` / `Admin1234!`
-**Demo client:** `james@acmeretail.com` / `demo1234`
+**Admin login:** `admin@revelio.io` / `Demo1234!`
+**Demo client:** `james@acmeretail.com` / `Demo1234!`
+
+## Production / fresh-deploy bootstrap
+
+A fresh deploy auto-seeds default benchmark configs but starts with no users.
+Create the first super_admin via:
+
+```bash
+curl -X POST https://your-backend/api/v1/auth/bootstrap \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"you@example.com","password":"<min 8 chars>","full_name":"Your Name","org_name":"Your Org"}'
+```
+
+Subsequent calls return 409. After this, log in via the UI normally.
+
+## Deploy health endpoints
+
+- `GET /health` - liveness, returns 200 even if the DB is down (process-only)
+- `GET /ready` - readiness, returns 503 if Postgres is unreachable
+- `GET /` - service banner
 
 ---
 
@@ -54,7 +73,7 @@ open http://localhost:3000
 | Frontend | Next.js 14, Tailwind CSS |
 | Backend | FastAPI, Python 3.12 |
 | Database | PostgreSQL 16 |
-| Queue | Redis + Celery |
+| Queue | Redis + Celery (paid tier); FastAPI BackgroundTasks (free tier) |
 | AI | Claude claude-sonnet-4-20250514 |
 | File parsing | pandas, pdfplumber, openpyxl |
 | PDF export | WeasyPrint + Jinja2 |

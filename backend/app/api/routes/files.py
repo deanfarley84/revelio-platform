@@ -3,14 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File as FastA
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
-import uuid, boto3
+import uuid
 from datetime import datetime, timezone
 
 from app.core.database import get_db
 from app.core.auth import get_current_user
-from app.core.config import settings
 from app.models.user import UploadedFile, Diagnostic, User
 from app.services.inline_jobs import parse_uploaded_file_inline
+from app.services.storage import upload_file as storage_upload
 
 router = APIRouter()
 
@@ -22,15 +22,6 @@ ALLOWED_TYPES = {
     "text/plain": "txt",
 }
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 20MB
-
-
-def get_s3():
-    return boto3.client(
-        "s3",
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.AWS_REGION,
-    )
 
 
 @router.post("/{diagnostic_id}/upload")
@@ -61,23 +52,12 @@ async def upload_file(
     if len(file_bytes) > MAX_FILE_SIZE:
         raise HTTPException(400, "File exceeds 20MB limit")
 
-    # Upload to S3
+    # Upload via storage service (S3 or local fallback)
     storage_key = f"uploads/{diag.org_id}/{diagnostic_id}/{uuid.uuid4()}/{file.filename}"
     try:
-        s3 = get_s3()
-        s3.put_object(
-            Bucket=settings.AWS_S3_BUCKET,
-            Key=storage_key,
-            Body=file_bytes,
-            ContentType=file.content_type or "application/octet-stream",
-            ServerSideEncryption="AES256",
-        )
+        await storage_upload(storage_key, file_bytes, file.content_type or "application/octet-stream")
     except Exception as e:
-        if settings.ENVIRONMENT == "development":
-            # In dev, skip S3 and store locally if needed
-            storage_key = f"local/{storage_key}"
-        else:
-            raise HTTPException(500, f"Upload failed: {str(e)}")
+        raise HTTPException(500, f"Upload failed: {str(e)}")
 
     # Create DB record
     file_rec = UploadedFile(

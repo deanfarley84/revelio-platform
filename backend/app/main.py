@@ -1,31 +1,52 @@
+import asyncio
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
-from app.core.database import engine, Base
+from app.core.database import engine, Base, AsyncSessionLocal
+from app.core.middleware import RequestContextMiddleware
 from app.api.routes import auth, diagnostics, files, admin, benchmarks, intel, reports, notifications
+
+logger = logging.getLogger("revelio")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
+
+async def _init_schema_safely() -> None:
+    """
+    Best-effort table creation + default seed. Runs in a background task so
+    /health responds fast on cold start. If the DB is unreachable we log and
+    continue - the next request hitting a DB-backed route will surface the
+    real error.
+    """
+    try:
+        from app.models import user  # noqa: F401  register models on Base
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables ensured")
+    except Exception as e:
+        logger.warning("Schema init failed (will retry on first DB request): %s", e)
+        return
+
+    try:
+        from app.services.seed_defaults import seed_all
+        async with AsyncSessionLocal() as db:
+            result = await seed_all(db)
+            if result.get("benchmarks_inserted"):
+                logger.info("Default seed: %s", result)
+    except Exception as e:
+        logger.warning("Default seed failed (non-fatal): %s", e)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    print(f"Revelio API starting — environment: {settings.ENVIRONMENT}")
-
-    # Auto-create tables on first boot (early-stage; replace with Alembic migrations in production)
-    if settings.ENVIRONMENT in ("production", "development"):
-        try:
-            # Import models so they register against Base.metadata
-            from app.models import user  # noqa: F401
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-            print("Database tables ensured")
-        except Exception as e:
-            print(f"Warning: table creation failed: {e}")
-
+    logger.info("Revelio API starting in %s mode", settings.ENVIRONMENT)
+    # Fire-and-forget so the health check passes immediately and Render
+    # doesn't kill the boot waiting on Postgres.
+    asyncio.create_task(_init_schema_safely())
     yield
-    # Shutdown
-    print("Revelio API shutting down")
+    logger.info("Revelio API shutting down")
 
 
 app = FastAPI(
@@ -37,15 +58,16 @@ app = FastAPI(
     redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
 )
 
+app.add_middleware(RequestContextMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID"],
 )
 
-# Routers
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(diagnostics.router, prefix="/api/v1/diagnostics", tags=["Diagnostics"])
 app.include_router(files.router, prefix="/api/v1/files", tags=["Files"])
@@ -58,4 +80,23 @@ app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["
 
 @app.get("/health")
 async def health():
+    """Liveness probe - returns 200 as long as the process is alive."""
     return {"status": "ok", "service": "revelio-api"}
+
+
+@app.get("/ready")
+async def ready():
+    """Readiness probe - returns 200 only when the DB is reachable."""
+    from sqlalchemy import text
+    try:
+        async with AsyncSessionLocal() as db:
+            await db.execute(text("SELECT 1"))
+        return {"status": "ready", "db": "ok"}
+    except Exception as e:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=503, content={"status": "not_ready", "db": str(e)})
+
+
+@app.get("/")
+async def root():
+    return {"service": "revelio-api", "version": "1.0.0", "status": "ok"}

@@ -25,23 +25,29 @@ async def admin_overview(
     processing = (await db.execute(select(func.count(Diagnostic.id)).where(Diagnostic.status.in_(["submitted", "validating", "processing", "ai_complete"])))).scalar()
     released = (await db.execute(select(func.count(Diagnostic.id)).where(Diagnostic.status == "released"))).scalar()
 
-    # Total leakage across all released diagnostics
-    total_leakage_result = await db.execute(
-        select(func.sum(
-            func.cast(
-                func.jsonb_extract_path_text(Diagnostic.final_output, "annual_leakage_estimate", "mid"),
-                type_=func.float
-            )
-        )).where(Diagnostic.status == "released")
+    # Total leakage across all released diagnostics. Aggregated in Python
+    # because final_output.annual_leakage_estimate.mid is a JSONB-nested float
+    # and the SQL cast was previously broken; volume is small enough that this
+    # is fine until we have thousands of released diagnostics.
+    released_result = await db.execute(
+        select(Diagnostic.final_output).where(Diagnostic.status == "released")
     )
-    # Fallback for sum
-    total_leakage = 0
+    total_leakage = 0.0
+    for (final_output,) in released_result.all():
+        if not final_output:
+            continue
+        mid = (final_output.get("annual_leakage_estimate") or {}).get("mid")
+        if mid is not None:
+            try:
+                total_leakage += float(mid)
+            except (TypeError, ValueError):
+                pass
 
     # Low confidence flags
     low_conf = (await db.execute(
         select(func.count(Diagnostic.id)).where(
             Diagnostic.status == "pending_review",
-            Diagnostic.ai_output.op("->>")(  "confidence_level") == "low"
+            Diagnostic.ai_output.op("->>")("confidence_level") == "low"
         )
     )).scalar()
 

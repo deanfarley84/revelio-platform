@@ -1,15 +1,23 @@
 """
 Storage Service
-Supports both AWS S3 (production) and local filesystem (demo mode).
-Set USE_LOCAL_STORAGE=true to bypass S3 entirely.
+Supports both AWS S3 (production) and local filesystem (demo / free tier).
+
+Mode selection (in order of precedence):
+  1. USE_LOCAL_STORAGE=true env var forces local
+  2. AWS_ACCESS_KEY_ID empty -> local (auto-fallback for free tier deploys)
+  3. Otherwise -> S3
 """
 import os
 from pathlib import Path
 from app.core.config import settings
 
 
-def _use_local() -> bool:
-    return os.getenv("USE_LOCAL_STORAGE", "false").lower() == "true"
+def use_local() -> bool:
+    if os.getenv("USE_LOCAL_STORAGE", "").lower() == "true":
+        return True
+    if not settings.AWS_ACCESS_KEY_ID or not settings.AWS_SECRET_ACCESS_KEY:
+        return True
+    return False
 
 
 def _local_path(key: str) -> Path:
@@ -20,7 +28,7 @@ def _local_path(key: str) -> Path:
 
 
 async def upload_file(key: str, data: bytes, content_type: str = "application/octet-stream") -> str:
-    if _use_local():
+    if use_local():
         _local_path(key).write_bytes(data)
         return key
     import boto3
@@ -37,7 +45,7 @@ async def upload_file(key: str, data: bytes, content_type: str = "application/oc
 
 
 async def download_file(key: str) -> bytes:
-    if _use_local():
+    if use_local():
         p = _local_path(key)
         return p.read_bytes() if p.exists() else b""
     import boto3
@@ -51,8 +59,8 @@ async def download_file(key: str) -> bytes:
 
 
 def get_presigned_url(key: str, expires: int = 3600) -> str:
-    if _use_local():
-        return f"/api/v1/demo/files/{key}"
+    if use_local():
+        return f"/api/v1/files/local/{key}"
     import boto3
     return boto3.client(
         "s3",

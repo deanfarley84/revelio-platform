@@ -4,7 +4,7 @@ Calls Claude API, handles tier-based prompting, parses structured output.
 """
 import json
 import anthropic
-from typing import Optional
+from typing import Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -12,7 +12,10 @@ from app.core.config import settings
 from app.models.user import Diagnostic, BenchmarkConfig
 from app.prompts.diagnostic_prompts import build_prompt
 
-client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+# AsyncAnthropic so /diagnostics/{id}/submit doesn't block the event loop while
+# Claude is responding. Inline jobs are running on the request thread on free
+# tier and a sync call would block all other requests for 10-30s.
+client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
 
 async def get_benchmarks(db: AsyncSession, vertical: Optional[str] = None) -> dict:
@@ -72,10 +75,10 @@ def build_merchant_data(diagnostic: Diagnostic) -> dict:
     }
 
 
-async def run_ai_analysis(diagnostic: Diagnostic, db: AsyncSession) -> dict:
+async def run_ai_analysis(diagnostic: Diagnostic, db: AsyncSession) -> Tuple[dict, dict]:
     """
     Main entry point: run Claude analysis for a diagnostic.
-    Returns the parsed AI output dict.
+    Returns (parsed AI output dict, benchmarks snapshot used).
     """
     benchmarks = await get_benchmarks(db, vertical=diagnostic.vertical)
     merchant_data = build_merchant_data(diagnostic)
@@ -86,7 +89,7 @@ async def run_ai_analysis(diagnostic: Diagnostic, db: AsyncSession) -> dict:
         benchmarks=benchmarks,
     )
 
-    response = client.messages.create(
+    response = await client.messages.create(
         model=settings.ANTHROPIC_MODEL,
         max_tokens=4096,
         system=system_prompt,

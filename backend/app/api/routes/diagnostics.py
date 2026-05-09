@@ -2,20 +2,31 @@
 Diagnostics API Routes
 CRUD + submission + approval workflow
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
 
-from app.core.database import get_db
+from app.core.database import get_db, AsyncSessionLocal
 from app.core.auth import get_current_user, require_admin, require_operator
 from app.models.user import Diagnostic, User, Organisation, AuditLog, Notification
 from app.services.inline_jobs import run_diagnostic_analysis_inline, send_notification_inline
 from app.services.ai_service import classify_confidence
 
 router = APIRouter()
+
+
+async def _run_analysis_in_background(diagnostic_id: str) -> None:
+    """Spawned via BackgroundTasks. Owns its own DB session."""
+    import logging
+    log = logging.getLogger("revelio.bg")
+    try:
+        async with AsyncSessionLocal() as db:
+            await run_diagnostic_analysis_inline(db, diagnostic_id)
+    except Exception as e:
+        log.exception("Background analysis failed for %s: %s", diagnostic_id, e)
 
 
 def generate_reference(year: int, count: int) -> str:
@@ -79,10 +90,15 @@ async def create_diagnostic(
 @router.post("/{diagnostic_id}/submit")
 async def submit_diagnostic(
     diagnostic_id: str,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Submit diagnostic for analysis — triggers background pipeline."""
+    """
+    Submit diagnostic for analysis. The AI pipeline runs as a FastAPI
+    BackgroundTask so this endpoint returns immediately; the client should
+    poll GET /diagnostics/{id}/status to track progress.
+    """
     diag = await db.get(Diagnostic, diagnostic_id)
     if not diag:
         raise HTTPException(404, "Diagnostic not found")
@@ -91,26 +107,20 @@ async def submit_diagnostic(
     if diag.status not in ("draft", "revision_requested"):
         raise HTTPException(400, f"Cannot submit diagnostic in status: {diag.status}")
 
-    # Validate minimum inputs
     if not diag.monthly_volume or not diag.vertical:
         raise HTTPException(400, "Monthly volume and vertical are required")
 
     diag.status = "submitted"
     diag.submitted_at = datetime.now(timezone.utc)
-
-    # Pre-check confidence
     confidence = classify_confidence(diag)
-
     await db.commit()
 
-    # Notify client (inline)
     await send_notification_inline(
         db,
         notification_type="submission_received",
         context={"org_id": str(diag.org_id), "reference": diag.reference},
     )
 
-    # Flag admin if low confidence (inline)
     if confidence == "low":
         await send_notification_inline(
             db,
@@ -118,10 +128,45 @@ async def submit_diagnostic(
             context={"diagnostic_id": str(diag.id), "reference": diag.reference, "company": diag.company_name},
         )
 
-    # Run AI analysis inline (workers disabled on free tier — blocks the request 10–30s)
-    await run_diagnostic_analysis_inline(db, str(diag.id))
+    # Hand the AI run off so the response can return now and the frontend
+    # can show a progress UI by polling /status.
+    background_tasks.add_task(_run_analysis_in_background, str(diag.id))
 
-    return {"status": "submitted", "reference": diag.reference, "confidence_pre_check": confidence}
+    return {
+        "status": "submitted",
+        "reference": diag.reference,
+        "confidence_pre_check": confidence,
+        "poll": f"/api/v1/diagnostics/{diag.id}/status",
+    }
+
+
+@router.get("/{diagnostic_id}/status")
+async def diagnostic_status(
+    diagnostic_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Lightweight status probe for polling during a running analysis. Returns
+    only the fields needed to drive a progress UI; safe to call at 1Hz.
+    """
+    diag = await db.get(Diagnostic, diagnostic_id)
+    if not diag:
+        raise HTTPException(404, "Diagnostic not found")
+    if str(diag.org_id) != str(current_user.org_id) and current_user.role not in ("super_admin", "operator_admin", "analyst"):
+        raise HTTPException(403, "Access denied")
+
+    ai = diag.ai_output or {}
+    terminal = diag.status in ("pending_review", "approved", "released", "revision_requested")
+    return {
+        "id": str(diag.id),
+        "reference": diag.reference,
+        "status": diag.status,
+        "confidence_level": ai.get("confidence_level"),
+        "ai_run_at": diag.ai_run_at.isoformat() if diag.ai_run_at else None,
+        "terminal": terminal,
+        "leakage_mid": (ai.get("annual_leakage_estimate") or {}).get("mid"),
+    }
 
 
 @router.get("/")

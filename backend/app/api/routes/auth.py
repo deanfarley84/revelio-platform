@@ -1,7 +1,7 @@
 """auth.py — Authentication routes"""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from datetime import datetime, timezone
 
 from app.core.database import get_db
@@ -43,6 +43,51 @@ async def me(current_user: User = Depends(get_current_user)):
         "full_name": current_user.full_name,
         "role": current_user.role,
         "org_id": str(current_user.org_id) if current_user.org_id else None,
+    }
+
+
+@router.post("/bootstrap")
+async def bootstrap(payload: dict, db: AsyncSession = Depends(get_db)):
+    """
+    Create the first super_admin and an internal Revelio organisation.
+    Refuses if any super_admin already exists. Used once per fresh deploy
+    to get a real account into an empty database.
+    """
+    existing = await db.execute(
+        select(func.count(User.id)).where(User.role == "super_admin")
+    )
+    if (existing.scalar() or 0) > 0:
+        raise HTTPException(409, "A super_admin already exists; use /auth/login")
+
+    email = (payload.get("email") or "").strip().lower()
+    password = payload.get("password") or ""
+    full_name = payload.get("full_name") or ""
+    if not email or not password or len(password) < 8 or not full_name:
+        raise HTTPException(400, "email, full_name and a password of at least 8 chars are required")
+
+    org = Organisation(
+        name=payload.get("org_name") or "Revelio Operator",
+        tier="enterprise",
+        is_active=True,
+    )
+    db.add(org)
+    await db.flush()
+
+    user = User(
+        org_id=org.id,
+        email=email,
+        full_name=full_name,
+        role="super_admin",
+        password_hash=hash_password(password),
+    )
+    db.add(user)
+    await db.commit()
+
+    token = create_access_token({"sub": str(user.id), "role": user.role, "org": str(org.id)})
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {"id": str(user.id), "email": user.email, "role": user.role, "org_id": str(org.id)},
     }
 
 

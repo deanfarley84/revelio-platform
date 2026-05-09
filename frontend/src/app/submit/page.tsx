@@ -1,9 +1,9 @@
 'use client'
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import AppShell from '@/components/layout/AppShell'
 import { diagnosticsApi, filesApi } from '@/lib/api'
-import { Upload, FileText, CheckCircle, AlertCircle, X, ArrowRight } from 'lucide-react'
+import { Upload, FileText, CheckCircle, AlertCircle, X, ArrowRight, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 const ACCEPT = { 'text/csv': ['.csv'], 'application/vnd.ms-excel': ['.xls'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'], 'application/pdf': ['.pdf'], 'text/plain': ['.txt'] }
@@ -18,7 +18,8 @@ export default function SubmitPage() {
   const [parsedPreview, setParsedPreview] = useState<ParsedPreview | null>(null)
   const [formData, setFormData] = useState({ company_name: '', website: '', vertical: 'retail', tier: 'core' })
   const [submitting, setSubmitting] = useState(false)
-  const [step, setStep] = useState<'upload' | 'review' | 'submitting' | 'done'>('upload')
+  const [step, setStep] = useState<'upload' | 'review' | 'submitting' | 'processing' | 'done'>('upload')
+  const [statusInfo, setStatusInfo] = useState<{ status?: string; confidence?: string | null; terminal?: boolean }>({})
 
   const ensureDiagnostic = async () => {
     if (diagId) return diagId
@@ -68,13 +69,44 @@ export default function SubmitPage() {
         await diagnosticsApi.create({ ...formData, ...update, id: diagId })
       }
       await diagnosticsApi.submit(diagId)
-      setStep('done')
+      setStep('processing')
     } catch (e: any) {
       alert(e.response?.data?.detail || 'Submission failed')
       setStep('review')
     }
     setSubmitting(false)
   }
+
+  // Poll the status endpoint while the AI runs in the background.
+  useEffect(() => {
+    if (step !== 'processing' || !diagId) return
+    let cancelled = false
+    let attempts = 0
+    const tick = async () => {
+      attempts += 1
+      try {
+        const res = await diagnosticsApi.status(diagId)
+        const { status, confidence_level, terminal } = res.data
+        if (cancelled) return
+        setStatusInfo({ status, confidence: confidence_level, terminal })
+        if (terminal) {
+          setStep('done')
+          return
+        }
+      } catch {
+        // tolerate transient errors (cold start, sleeping dyno, etc)
+      }
+      // Up to ~3 minutes total at 2s intervals
+      if (attempts < 90 && !cancelled) {
+        setTimeout(tick, 2000)
+      } else if (!cancelled) {
+        // give up gracefully; user can still navigate to dashboard
+        setStep('done')
+      }
+    }
+    tick()
+    return () => { cancelled = true }
+  }, [step, diagId])
 
   const fieldLabels: Record<string, string> = {
     monthly_volume: 'Monthly volume (£)', auth_rate: 'Auth rate (%)', decline_rate: 'Decline rate (%)',
@@ -83,14 +115,43 @@ export default function SubmitPage() {
     fx_fee_spread: 'FX spread (%)', mdr: 'MDR (%)', psp_detected: 'PSP detected',
   }
 
+  if (step === 'processing') {
+    const stepLabels: Record<string, string> = {
+      submitted: 'Validating inputs',
+      processing: 'Running AI analysis',
+      ai_complete: 'Drafting findings',
+      pending_review: 'Awaiting operator review',
+    }
+    const label = stepLabels[statusInfo.status || ''] || 'Processing'
+    return (
+      <AppShell>
+        <div className="max-w-lg mx-auto mt-16 text-center">
+          <div className="w-14 h-14 rounded-full bg-brand-blue-bg flex items-center justify-center mx-auto mb-4">
+            <Loader2 size={24} className="text-brand-blue animate-spin" />
+          </div>
+          <h1 className="text-xl font-medium mb-2">{label}</h1>
+          <p className="text-[13px] text-ink/50 mb-2">Claude is analysing your payment stack. This usually takes 15-45 seconds.</p>
+          <p className="text-[12px] text-ink/40 font-mono mb-6">Reference: {diagId}</p>
+          <button onClick={() => router.push('/dashboard')} className="btn-ghost">Continue in background</button>
+        </div>
+      </AppShell>
+    )
+  }
+
   if (step === 'done') return (
     <AppShell>
       <div className="max-w-lg mx-auto mt-16 text-center">
         <div className="w-14 h-14 rounded-full bg-brand-green-bg flex items-center justify-center mx-auto mb-4">
           <CheckCircle size={24} className="text-brand-green" />
         </div>
-        <h1 className="text-xl font-medium mb-2">Diagnostic submitted</h1>
-        <p className="text-[13px] text-ink/50 mb-2">Your data is being analysed. We'll notify you when your report is ready.</p>
+        <h1 className="text-xl font-medium mb-2">
+          {statusInfo.status === 'pending_review' ? 'Awaiting operator review' : 'Diagnostic submitted'}
+        </h1>
+        <p className="text-[13px] text-ink/50 mb-2">
+          {statusInfo.status === 'pending_review'
+            ? "Analysis complete. We'll notify you once an operator has reviewed and released the report."
+            : "Your data is being analysed. We'll notify you when your report is ready."}
+        </p>
         <p className="text-[12px] text-ink/40 font-mono mb-6">Reference: {diagId}</p>
         <button onClick={() => router.push('/dashboard')} className="btn-primary">Go to dashboard <ArrowRight size={13} /></button>
       </div>

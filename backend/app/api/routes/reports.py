@@ -2,13 +2,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
-import boto3
 
 from app.core.database import get_db
 from app.core.auth import get_current_user, require_operator
-from app.core.config import settings
 from app.models.user import Diagnostic, ReportExport, User
 from app.services.inline_jobs import generate_report_inline
+from app.services.storage import download_file as storage_download
 
 router = APIRouter()
 
@@ -78,16 +77,17 @@ async def download_export(
         raise HTTPException(403, "Access denied")
 
     try:
-        s3 = boto3.client(
-            "s3",
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_REGION,
-        )
-        obj = s3.get_object(Bucket=settings.AWS_S3_BUCKET, Key=export.storage_key)
-        content = obj["Body"].read()
+        content = await storage_download(export.storage_key)
+        if not content:
+            raise HTTPException(404, "Export file not found in storage")
         media_type = "application/pdf" if export.export_type == "pdf" else "text/csv"
-        filename = f"revelio_{export.export_type}.{export.export_type}"
-        return Response(content=content, media_type=media_type, headers={"Content-Disposition": f"attachment; filename={filename}"})
+        filename = f"revelio_{export.diagnostic_id}_{export.export_type}.{export.export_type}"
+        return Response(
+            content=content,
+            media_type=media_type,
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(500, f"Download failed: {str(e)}")
