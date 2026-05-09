@@ -167,21 +167,46 @@ export default function RoiPage() {
     setDrivers(next)
   }, [mode, selectedId, diagnostics])
 
-  // Computed totals
+  // Computed totals. Mid case is the slider-driven number; low and high
+  // bracket it by scaling each driver's recovery rate by 0.6 / 1.2 (high
+  // capped at the per-driver ceiling). Cost stays constant across cases.
   const totals = useMemo(() => {
-    const annualRecoverable = drivers.reduce(
-      (sum, d) => sum + (d.estimatedLoss * d.recoveryRate / 100),
-      0
-    )
     const totalCost = drivers.reduce((sum, d) => sum + d.implementationCost, 0)
-    const periodRecoverable = annualRecoverable * (timeframeMonths / 12)
-    const netGain = periodRecoverable - totalCost
-    const roiMultiple = totalCost > 0 ? periodRecoverable / totalCost : null
-    const monthlyRecoverable = annualRecoverable / 12
-    const paybackWeeks = monthlyRecoverable > 0
-      ? (totalCost / monthlyRecoverable) * (52 / 12)
-      : null
-    return { annualRecoverable, totalCost, periodRecoverable, netGain, roiMultiple, paybackWeeks }
+
+    const annualForFactor = (factor: number) =>
+      drivers.reduce((sum, d) => {
+        const rate = factor === 1
+          ? d.recoveryRate
+          : Math.min(d.recoveryRate * factor, ceilingFor(d.category))
+        return sum + (d.estimatedLoss * rate / 100)
+      }, 0)
+
+    const buildCase = (factor: number) => {
+      const annualRecoverable = annualForFactor(factor)
+      const periodRecoverable = annualRecoverable * (timeframeMonths / 12)
+      const monthlyRecoverable = annualRecoverable / 12
+      return {
+        annualRecoverable,
+        periodRecoverable,
+        roiMultiple: totalCost > 0 ? periodRecoverable / totalCost : null,
+        paybackWeeks: monthlyRecoverable > 0 ? (totalCost / monthlyRecoverable) * (52 / 12) : null,
+      }
+    }
+
+    const low = buildCase(0.6)
+    const mid = buildCase(1)
+    const high = buildCase(1.2)
+
+    return {
+      annualRecoverable: mid.annualRecoverable,
+      totalCost,
+      periodRecoverable: mid.periodRecoverable,
+      netGain: mid.periodRecoverable - totalCost,
+      roiMultiple: mid.roiMultiple,
+      paybackWeeks: mid.paybackWeeks,
+      low,
+      high,
+    }
   }, [drivers, timeframeMonths])
 
   // Driver mutations
@@ -336,7 +361,9 @@ export default function RoiPage() {
           <div className="kpi-card">
             <div className="kpi-label">Recoverable ({timeframeMonths}m)</div>
             <div className="kpi-value text-brand-green">{fmtCurrency(totals.periodRecoverable)}</div>
-            <div className="text-[10.5px] text-ink/45 mt-1">{fmtCurrency(totals.annualRecoverable)} annual</div>
+            <div className="text-[10.5px] text-ink/45 mt-1">
+              {fmtCurrency(totals.low.periodRecoverable)}–{fmtCurrency(totals.high.periodRecoverable)} range
+            </div>
           </div>
           <div className="kpi-card">
             <div className="kpi-label">Implementation cost</div>
@@ -346,7 +373,11 @@ export default function RoiPage() {
           <div className="kpi-card">
             <div className="kpi-label">ROI multiple</div>
             <div className="kpi-value">{totals.roiMultiple != null ? `${totals.roiMultiple.toFixed(1)}x` : '—'}</div>
-            <div className="text-[10.5px] text-ink/45 mt-1">Period return ÷ cost</div>
+            <div className="text-[10.5px] text-ink/45 mt-1">
+              {totals.roiMultiple != null && totals.low.roiMultiple != null && totals.high.roiMultiple != null
+                ? `${totals.low.roiMultiple.toFixed(1)}x – ${totals.high.roiMultiple.toFixed(1)}x range`
+                : 'Period return ÷ cost'}
+            </div>
           </div>
           <div className="kpi-card">
             <div className="kpi-label">Payback</div>
