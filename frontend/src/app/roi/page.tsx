@@ -108,6 +108,12 @@ export default function RoiPage() {
   const [demoBannerDismissed, setDemoBannerDismissed] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
+  // Cost overlays. null = overlay not added; 0 = added but empty;
+  // any positive number = real fee. Math wiring lands in a follow-up
+  // commit once the canonical totals replacement is finalised.
+  const [orchestrationCost, setOrchestrationCost] = useState<number | null>(null)
+  const [orchestrationNotes, setOrchestrationNotes] = useState<string>('')
+  const [advisoryFee, setAdvisoryFee] = useState<number | null>(null)
 
   // Load released diagnostics for the dropdown
   useEffect(() => {
@@ -147,6 +153,9 @@ export default function RoiPage() {
       setDrivers(DEFAULT_DRIVERS)
       setCompanyName('')
       setDemoActive(false)
+      setOrchestrationCost(null)
+      setOrchestrationNotes('')
+      setAdvisoryFee(null)
     }
   }, [demoActive, selectedId, mode])
 
@@ -234,6 +243,9 @@ export default function RoiPage() {
     setDrivers(DEMO_DRIVERS)
     setCompanyName(DEMO_COMPANY)
     setTimeframeMonths(12)
+    setOrchestrationCost(null)
+    setOrchestrationNotes('')
+    setAdvisoryFee(null)
   }
 
   const copySummary = async () => {
@@ -489,13 +501,94 @@ export default function RoiPage() {
           )}
         </div>
 
+        {/* Cost overlays. Two opt-in costs that the operator layers on top
+            of the pure-recovery base. Math wiring lands in a follow-up. */}
+        {(orchestrationCost !== null || advisoryFee !== null) && (
+          <div className="space-y-3 mb-4">
+            {orchestrationCost !== null && (
+              <div className="card py-3">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="section-title text-[12.5px]">Orchestration adoption, recurring</div>
+                  <button
+                    onClick={() => { setOrchestrationCost(null); setOrchestrationNotes('') }}
+                    className="text-ink/30 hover:text-brand-red transition-colors"
+                    aria-label="Remove orchestration overlay"
+                  >
+                    <X size={13}/>
+                  </button>
+                </div>
+                <div className="form-grid-2">
+                  <div>
+                    <label className="label">Annual run-rate cost (£)</label>
+                    <input
+                      type="number"
+                      className="input"
+                      value={orchestrationCost || ''}
+                      onChange={e => setOrchestrationCost(Number(e.target.value) || 0)}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Notes</label>
+                    <input
+                      className="input"
+                      value={orchestrationNotes}
+                      onChange={e => setOrchestrationNotes(e.target.value)}
+                      placeholder="e.g. Primer @ 0.12% × £5m/mo"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            {advisoryFee !== null && (
+              <div className="card py-3">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="section-title text-[12.5px]">Revelio advisory, one-off</div>
+                  <button
+                    onClick={() => setAdvisoryFee(null)}
+                    className="text-ink/30 hover:text-brand-red transition-colors"
+                    aria-label="Remove advisory overlay"
+                  >
+                    <X size={13}/>
+                  </button>
+                </div>
+                <div className="form-grid-2">
+                  <div>
+                    <label className="label">Fee (£)</label>
+                    <input
+                      type="number"
+                      className="input"
+                      value={advisoryFee || ''}
+                      onChange={e => setAdvisoryFee(Number(e.target.value) || 0)}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div></div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Drivers table */}
         <div className="card">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 gap-3">
             <div className="section-title text-[13.5px]">Drivers</div>
-            {mode === 'manual' && (
-              <button onClick={addDriver} className="btn-ghost btn-xs"><Plus size={11}/> Add driver</button>
-            )}
+            <div className="flex items-center gap-2">
+              {orchestrationCost === null && (
+                <button onClick={() => setOrchestrationCost(0)} className="btn-ghost btn-sm">
+                  <Plus size={13}/> Orchestration cost
+                </button>
+              )}
+              {advisoryFee === null && (
+                <button onClick={() => setAdvisoryFee(0)} className="btn-ghost btn-sm">
+                  <Plus size={13}/> Advisory fee
+                </button>
+              )}
+              {mode === 'manual' && (
+                <button onClick={addDriver} className="btn-ghost btn-xs"><Plus size={11}/> Add driver</button>
+              )}
+            </div>
           </div>
 
           <table className="tbl">
