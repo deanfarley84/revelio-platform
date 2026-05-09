@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import AppShell from '@/components/layout/AppShell'
 import { diagnosticsApi, fmtCurrency } from '@/lib/api'
-import { Calculator, FileText, Plus, Trash2, Copy, Check } from 'lucide-react'
+import { Calculator, FileText, Plus, Trash2, Copy, Check, X } from 'lucide-react'
 
 type Mode = 'diagnostic' | 'manual'
 
@@ -22,6 +22,16 @@ const DEFAULT_DRIVERS: Driver[] = [
   { id: 'd4', category: 'Retry logic',                 estimatedLoss: 0, recoveryRate: 80, implementationCost: 0 },
 ]
 
+// Mid-market UK retailer scenario, used when the dashboard has no released
+// diagnostics yet so the calculator is never shown empty.
+const DEMO_DRIVERS: Driver[] = [
+  { id: 'demo1', category: 'Authorisation loss',       estimatedLoss: 480000, recoveryRate: 60, implementationCost: 25000 },
+  { id: 'demo2', category: 'Cross-border performance', estimatedLoss: 180000, recoveryRate: 40, implementationCost: 15000 },
+  { id: 'demo3', category: 'FX leakage',               estimatedLoss: 220000, recoveryRate: 70, implementationCost: 8000 },
+  { id: 'demo4', category: 'Retry logic',              estimatedLoss: 95000,  recoveryRate: 80, implementationCost: 12000 },
+]
+const DEMO_COMPANY = 'Acme Retail (example)'
+
 export default function RoiPage() {
   const [mode, setMode] = useState<Mode>('diagnostic')
   const [diagnostics, setDiagnostics] = useState<any[]>([])
@@ -31,6 +41,8 @@ export default function RoiPage() {
   const [timeframeMonths, setTimeframeMonths] = useState<number>(12)
   const [companyName, setCompanyName] = useState<string>('')
   const [copied, setCopied] = useState(false)
+  const [demoActive, setDemoActive] = useState(false)
+  const [demoBannerDismissed, setDemoBannerDismissed] = useState(false)
 
   // Load released diagnostics for the dropdown
   useEffect(() => {
@@ -44,6 +56,34 @@ export default function RoiPage() {
       })
       .catch(() => setLoading(false))
   }, [])
+
+  // Demo mode: enter once when the dashboard has no released diagnostics
+  // so the calculator never lands empty for first-time visitors.
+  useEffect(() => {
+    if (loading || demoActive) return
+    if (mode === 'diagnostic' && diagnostics.length === 0 && !selectedId) {
+      setDrivers(DEMO_DRIVERS)
+      setCompanyName(DEMO_COMPANY)
+      setTimeframeMonths(12)
+      setDemoActive(true)
+    }
+  }, [loading, mode, diagnostics, selectedId, demoActive])
+
+  // Exit demo mode the moment the user picks a real diagnostic or switches
+  // to manual. Diagnostic hydration is handled by the next effect; here we
+  // only need to wipe demo data when going to manual.
+  useEffect(() => {
+    if (!demoActive) return
+    if (selectedId) {
+      setDemoActive(false)
+      return
+    }
+    if (mode === 'manual') {
+      setDrivers(DEFAULT_DRIVERS)
+      setCompanyName('')
+      setDemoActive(false)
+    }
+  }, [demoActive, selectedId, mode])
 
   // When a diagnostic is selected, hydrate drivers from financial_breakdown
   useEffect(() => {
@@ -100,6 +140,11 @@ export default function RoiPage() {
   const removeDriver = (id: string) => {
     setDrivers(prev => prev.filter(d => d.id !== id))
   }
+  const resetToExample = () => {
+    setDrivers(DEMO_DRIVERS)
+    setCompanyName(DEMO_COMPANY)
+    setTimeframeMonths(12)
+  }
 
   const copySummary = async () => {
     const lines = [
@@ -143,21 +188,40 @@ export default function RoiPage() {
 
         {/* Mode toggle */}
         <div className="card mb-4">
-          <div className="flex items-center gap-1 mb-3 p-1 bg-surface-2 rounded-md w-fit">
-            <button
-              onClick={() => setMode('diagnostic')}
-              className={`px-3 py-1.5 rounded text-[12px] font-medium transition-colors ${mode === 'diagnostic' ? 'bg-white text-ink shadow-sm' : 'text-ink/55'}`}
-            >
-              <FileText size={12} className="inline mr-1.5" />
-              From diagnostic
-            </button>
-            <button
-              onClick={() => setMode('manual')}
-              className={`px-3 py-1.5 rounded text-[12px] font-medium transition-colors ${mode === 'manual' ? 'bg-white text-ink shadow-sm' : 'text-ink/55'}`}
-            >
-              <Plus size={12} className="inline mr-1.5" />
-              Manual inputs
-            </button>
+          {demoActive && !demoBannerDismissed && (
+            <div className="bg-surface-2 rounded-md px-3 py-2 mb-3 flex items-center justify-between text-[12px] text-ink/70">
+              <span>Showing example data. Submit a diagnostic or switch to Manual to model your own scenario.</span>
+              <button
+                onClick={() => setDemoBannerDismissed(true)}
+                className="text-ink/40 hover:text-ink/70 ml-3"
+                aria-label="Dismiss example banner"
+              >
+                <X size={12}/>
+              </button>
+            </div>
+          )}
+          <div className="flex items-center justify-between mb-3 gap-3">
+            <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-md w-fit">
+              <button
+                onClick={() => setMode('diagnostic')}
+                className={`px-3 py-1.5 rounded text-[12px] font-medium transition-colors ${mode === 'diagnostic' ? 'bg-white text-ink shadow-sm' : 'text-ink/55'}`}
+              >
+                <FileText size={12} className="inline mr-1.5" />
+                From diagnostic
+              </button>
+              <button
+                onClick={() => setMode('manual')}
+                className={`px-3 py-1.5 rounded text-[12px] font-medium transition-colors ${mode === 'manual' ? 'bg-white text-ink shadow-sm' : 'text-ink/55'}`}
+              >
+                <Plus size={12} className="inline mr-1.5" />
+                Manual inputs
+              </button>
+            </div>
+            {demoActive && (
+              <button onClick={resetToExample} className="btn-ghost btn-xs">
+                Reset to example
+              </button>
+            )}
           </div>
 
           {mode === 'diagnostic' && (
