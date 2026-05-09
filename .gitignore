@@ -1,0 +1,71 @@
+# ─── Environment & secrets ─────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+*.pem
+*.key
+
+# ─── Node / Next.js ────────────────────────────────────
+node_modules/
+.next/
+out/
+build/
+dist/
+.npm
+.yarn/
+.pnp.*
+
+# ─── Python / FastAPI ──────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ─── Database / data ───────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+postgres-data/
+redis-data/
+
+# ─── IDE / OS ──────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ─── Logs ──────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── Uploads / generated files ─────────────────────────
+uploads/
+exports/
+tmp/
+*.pdf.tmp
+
+# ─── TypeScript ────────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
+
+# ─── Coverage / testing ────────────────────────────────
+coverage/
+.nyc_output/
+
+# ─── Docker volumes (local) ────────────────────────────
+docker/data/

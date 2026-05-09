@@ -1,0 +1,112 @@
+version: '3.9'
+
+# REVELIO DEMO MODE — no AWS, local storage, data pre-seeded
+# Usage: docker-compose -f docker-compose.demo.yml up --build
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: revelio
+      POSTGRES_USER: revelio
+      POSTGRES_PASSWORD: revelio_demo
+    volumes:
+      - demo_postgres:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U revelio"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://revelio:revelio_demo@db:5432/revelio
+      REDIS_URL: redis://redis:6379/0
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      JWT_SECRET: demo-jwt-secret-change-in-production
+      ENVIRONMENT: development
+      DEBUG: "true"
+      CORS_ORIGINS: "http://localhost:3000"
+      USE_LOCAL_STORAGE: "true"
+      LOCAL_STORAGE_PATH: /app/demo_files
+      AWS_ACCESS_KEY_ID: ""
+      AWS_SECRET_ACCESS_KEY: ""
+      AWS_S3_BUCKET: demo-local
+      AWS_REGION: eu-west-2
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - demo_files:/app/demo_files
+    command: >
+      sh -c "sleep 4 && python /app/demo/seed_demo.py && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://revelio:revelio_demo@db:5432/revelio
+      REDIS_URL: redis://redis:6379/0
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      JWT_SECRET: demo-jwt-secret-change-in-production
+      ENVIRONMENT: development
+      USE_LOCAL_STORAGE: "true"
+      LOCAL_STORAGE_PATH: /app/demo_files
+      AWS_ACCESS_KEY_ID: ""
+      AWS_SECRET_ACCESS_KEY: ""
+      AWS_S3_BUCKET: demo-local
+      AWS_REGION: eu-west-2
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - demo_files:/app/demo_files
+    command: celery -A app.workers.celery_app worker --loglevel=info -Q default,ai_analysis,file_parsing,report_generation -c 2
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  demo_postgres:
+  demo_files:

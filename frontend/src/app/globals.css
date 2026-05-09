@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { @apply bg-surface-bg text-ink font-sans text-sm antialiased; }
+  * { @apply box-border; }
+}
+
+@layer components {
+  .card { @apply bg-white border border-black/[0.07] rounded-lg p-4; }
+  .card-md { @apply bg-white border border-black/[0.07] rounded-lg p-5; }
+  .input { @apply w-full border border-black/[0.13] rounded px-3 py-2 text-[13px] text-ink bg-white outline-none focus:border-brand-blue transition-colors; }
+  .select { @apply input appearance-none cursor-pointer; }
+  .label { @apply block text-[11.5px] font-medium text-ink/60 mb-1.5; }
+  .btn-primary { @apply inline-flex items-center gap-1.5 px-4 py-2 bg-ink text-white text-[12.5px] font-medium rounded hover:bg-ink-2 transition-colors cursor-pointer border-none; }
+  .btn-ghost { @apply inline-flex items-center gap-1.5 px-4 py-2 bg-transparent text-ink/70 text-[12.5px] font-medium rounded border border-black/[0.13] hover:bg-surface-2 transition-colors cursor-pointer; }
+  .btn-sm { @apply px-3 py-1.5 text-[11.5px]; }
+  .btn-xs { @apply px-2.5 py-1 text-[11px]; }
+  .tag { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium; }
+  .tag-green { @apply bg-brand-green-bg text-brand-green; }
+  .tag-amber { @apply bg-brand-amber-bg text-brand-amber; }
+  .tag-red { @apply bg-brand-red-bg text-brand-red; }
+  .tag-blue { @apply bg-brand-blue-bg text-brand-blue; }
+  .tag-gray { @apply bg-surface-2 text-ink/60; }
+  .tag-purple { @apply bg-brand-purple-bg text-brand-purple; }
+  .tier-lite { @apply bg-brand-blue-bg text-brand-blue text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full; }
+  .tier-core { @apply bg-brand-teal-bg text-brand-teal text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full; }
+  .tier-enterprise { @apply bg-brand-purple-bg text-brand-purple text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full; }
+  .kpi-card { @apply bg-white border border-black/[0.07] rounded-lg p-4; }
+  .kpi-label { @apply text-[10.5px] font-medium text-ink/50 uppercase tracking-wider mb-1.5; }
+  .kpi-value { @apply text-2xl font-medium text-ink leading-tight; }
+  .section-title { @apply text-[15px] font-medium text-ink; }
+  .section-sub { @apply text-xs text-ink/50 mt-0.5; }
+  .alert-amber { @apply flex items-center gap-2 px-3 py-2.5 rounded bg-brand-amber-bg border border-brand-amber/20 text-brand-amber text-[12px]; }
+  .alert-red { @apply flex items-center gap-2 px-3 py-2.5 rounded bg-brand-red-bg border border-brand-red/15 text-brand-red text-[12px]; }
+  .alert-blue { @apply flex items-center gap-2 px-3 py-2.5 rounded bg-brand-blue-bg border border-brand-blue/20 text-brand-blue text-[12px]; }
+  .alert-green { @apply flex items-center gap-2 px-3 py-2.5 rounded bg-brand-green-bg border border-brand-green/20 text-brand-green text-[12px]; }
+  .narr { @apply bg-surface-2 border-l-2 border-ink rounded-r-lg p-3.5 text-[12.5px] text-ink/70 leading-relaxed; }
+  .tbl { @apply w-full border-collapse; }
+  .tbl th { @apply text-[10px] font-medium text-ink/40 uppercase tracking-wider py-2 px-3 text-left border-b border-black/[0.07]; }
+  .tbl td { @apply py-2.5 px-3 text-[12.5px] text-ink border-b border-black/[0.05]; }
+  .tbl tr:last-child td { @apply border-b-0; }
+  .tbl tr:hover td { @apply bg-surface-2/60; }
+  .form-row { @apply mb-3.5; }
+  .form-grid-2 { @apply grid grid-cols-2 gap-3; }
+  .dot { @apply inline-block w-1.5 h-1.5 rounded-full mr-1.5; }
+  .dot-g { @apply bg-green-500; }
+  .dot-a { @apply bg-amber-400; }
+  .dot-r { @apply bg-red-500; }
+  .dot-b { @apply bg-blue-500; }
+  .dot-gy { @apply bg-gray-300; }
+}
