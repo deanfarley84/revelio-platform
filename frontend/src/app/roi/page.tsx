@@ -280,13 +280,23 @@ export default function RoiPage() {
     setPdfBusy(true)
     setPdfError(null)
     try {
+      const costState = !totals.hasAnyCost
+        ? 'pure_recovery'
+        : totals.orchAnnual > 0 && totals.oneOffCost === 0
+          ? 'orchestration_only'
+          : totals.orchAnnual === 0 && totals.oneOffCost > 0
+            ? 'advisory_only'
+            : 'both'
       const res = await reportsApi.roiPdf({
         companyName: companyName || 'Scenario',
         timeframeMonths,
         drivers,
         totals: {
+          grossPeriodRecoverable: totals.grossPeriodRecoverable,
           periodRecoverable: totals.periodRecoverable,
           totalCost: totals.totalCost,
+          orchAnnual: totals.orchAnnual,
+          oneOffCost: totals.oneOffCost,
           roiMultiple: totals.roiMultiple,
           paybackWeeks: totals.paybackWeeks,
         },
@@ -296,6 +306,12 @@ export default function RoiPage() {
           lowRoi: totals.low.roiMultiple,
           highRoi: totals.high.roiMultiple,
         },
+        costOverlay: totals.hasAnyCost ? {
+          orchestrationAnnualCost: orchestrationCost,
+          orchestrationNotes,
+          advisoryFee,
+        } : null,
+        costState,
       })
       const blob = new Blob([res.data], { type: 'application/pdf' })
       const slug = (companyName || 'scenario').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'scenario'

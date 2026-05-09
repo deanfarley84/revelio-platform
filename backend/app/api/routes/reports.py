@@ -34,11 +34,16 @@ _ROI_PDF_TEMPLATE = """
   h1 { font-size: 17px; font-weight: 700; color: #1A1830; margin: 4px 0; }
   h2 { font-size: 10px; font-weight: 600; color: #1A1830; margin: 14px 0 8px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #E8E6E0; padding-bottom: 4px; }
   .meta { font-size: 10px; color: #95928A; margin-bottom: 14px; }
+  .inaction { background: #F5F4F1; border-left: 3px solid #1A1830; border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 11px; line-height: 1.55; color: #524F48; margin-bottom: 14px; }
+  .inaction-label { font-size: 8.5px; font-weight: 600; color: #1A1830; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 3px; }
+  .inaction strong { color: #0D0C0A; }
   .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
   .kpi { border: 1px solid #E8E6E0; border-radius: 6px; padding: 9px 11px; }
   .kpi-label { font-size: 8px; color: #95928A; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
   .kpi-value { font-size: 15px; font-weight: 600; color: #1A1830; }
+  .kpi-value.small { font-size: 12px; }
   .kpi-sub { font-size: 8.5px; color: #95928A; margin-top: 2px; }
+  .tag { display: inline-block; background: #DCEFE1; color: #1A6B3C; font-size: 8.5px; font-weight: 600; padding: 1px 6px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 4px; vertical-align: middle; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
   th { font-size: 9px; font-weight: 600; color: #95928A; text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 8px; text-align: left; border-bottom: 1px solid #E8E6E0; }
   td { padding: 6px 8px; font-size: 11px; border-bottom: 1px solid #F0EEE9; }
@@ -63,27 +68,71 @@ _ROI_PDF_TEMPLATE = """
   <h1>ROI summary</h1>
   <div class="meta">Modelling horizon: {{ timeframe_months }} months</div>
 
+  {% if totals.gross_period_recoverable > 0 %}
+  <div class="inaction">
+    <div class="inaction-label">Cost of inaction</div>
+    Over the next {{ timeframe_months }} months, doing nothing leaves <strong>{{ fmt(totals.gross_period_recoverable) }}</strong> on the table.
+    {% if cost_state == "pure_recovery" %}
+      Recovering it costs £0, most fixes are configuration changes or conversations with your existing providers.
+    {% elif cost_state == "orchestration_only" %}
+      Recovering it requires <strong>{{ fmt(totals.orch_annual) }}/year</strong> in orchestration fees, netting <strong>{{ fmt(totals.period_recoverable) }}</strong> over that period.
+    {% elif cost_state == "advisory_only" %}
+      One-off advisory of <strong>{{ fmt(totals.one_off_cost) }}</strong> recovers <strong>{{ fmt(totals.period_recoverable - totals.one_off_cost) }}</strong> net.
+    {% elif cost_state == "both" %}
+      <strong>{{ fmt(totals.one_off_cost) }}</strong> advisory plus <strong>{{ fmt(totals.orch_annual) }}/year</strong> fees recover <strong>{{ fmt(totals.period_recoverable - totals.one_off_cost) }}</strong> net.
+    {% endif %}
+  </div>
+  {% endif %}
+
   <div class="kpi-grid">
     <div class="kpi">
       <div class="kpi-label">Recoverable ({{ timeframe_months }}m)</div>
       <div class="kpi-value">{{ fmt(totals.period_recoverable) }}</div>
       <div class="kpi-sub">{{ fmt(scenario_range.low_recoverable) }}–{{ fmt(scenario_range.high_recoverable) }} range</div>
     </div>
-    <div class="kpi">
-      <div class="kpi-label">Implementation cost</div>
-      <div class="kpi-value">{{ fmt(totals.total_cost) }}</div>
-      <div class="kpi-sub">One-off</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">ROI multiple</div>
-      <div class="kpi-value">{% if totals.roi_multiple is not none %}{{ "%.1fx"|format(totals.roi_multiple) }}{% else %}—{% endif %}</div>
-      <div class="kpi-sub">{% if scenario_range.low_roi is not none and scenario_range.high_roi is not none %}{{ "%.1fx"|format(scenario_range.low_roi) }}–{{ "%.1fx"|format(scenario_range.high_roi) }} range{% else %}Period return ÷ cost{% endif %}</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Payback</div>
-      <div class="kpi-value">{{ payback_primary }}</div>
-      <div class="kpi-sub">{{ payback_secondary }}</div>
-    </div>
+    {% if cost_state == "pure_recovery" %}
+      <div class="kpi">
+        <div class="kpi-label">Cost to recover</div>
+        <div class="kpi-value">£0<span class="tag">Pure recovery</span></div>
+        <div class="kpi-sub">No spend required</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Recovery type</div>
+        <div class="kpi-value small">Pure recovery</div>
+        <div class="kpi-sub">Configuration and vendor changes</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Recovery starts</div>
+        <div class="kpi-value small">Immediately</div>
+        <div class="kpi-sub">No payback period</div>
+      </div>
+    {% else %}
+      <div class="kpi">
+        <div class="kpi-label">Implementation cost</div>
+        <div class="kpi-value">{{ fmt(totals.one_off_cost) }}</div>
+        <div class="kpi-sub">{% if totals.orch_annual > 0 %}One-off, plus {{ fmt(totals.orch_annual) }}/yr{% else %}One-off{% endif %}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">ROI multiple</div>
+        {% if totals.one_off_cost > 0 %}
+          <div class="kpi-value">{% if totals.roi_multiple is not none %}{{ "%.1fx"|format(totals.roi_multiple) }}{% else %}—{% endif %}</div>
+          <div class="kpi-sub">{% if scenario_range.low_roi is not none and scenario_range.high_roi is not none %}{{ "%.1fx"|format(scenario_range.low_roi) }}–{{ "%.1fx"|format(scenario_range.high_roi) }} range{% else %}Period return ÷ cost{% endif %}</div>
+        {% else %}
+          <div class="kpi-value small">Pure recovery (after fees)</div>
+          <div class="kpi-sub">{{ fmt(totals.orch_annual) }}/yr orchestration</div>
+        {% endif %}
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Payback</div>
+        {% if totals.one_off_cost > 0 %}
+          <div class="kpi-value">{{ payback_primary }}</div>
+          <div class="kpi-sub">{{ payback_secondary }}</div>
+        {% else %}
+          <div class="kpi-value small">Immediately</div>
+          <div class="kpi-sub">No one-off cost</div>
+        {% endif %}
+      </div>
+    {% endif %}
   </div>
 
   <h2>Drivers</h2>
@@ -93,7 +142,6 @@ _ROI_PDF_TEMPLATE = """
         <th>Driver</th>
         <th class="right">Annual loss</th>
         <th class="right">Recovery %</th>
-        <th class="right">Implementation cost</th>
         <th class="right">Net annual</th>
       </tr>
     </thead>
@@ -103,17 +151,46 @@ _ROI_PDF_TEMPLATE = """
         <td>{{ d.category }}</td>
         <td class="right mono">{{ fmt(d.estimated_loss) }}</td>
         <td class="right mono">{{ d.recovery_rate }}%</td>
-        <td class="right mono">{{ fmt(d.implementation_cost) }}</td>
         <td class="right mono">{{ fmt(d.net_annual) }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 
+  {% if cost_overlay and (cost_overlay.orchestration_annual_cost is not none or cost_overlay.advisory_fee is not none) %}
+  <h2>Cost overlays</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Overlay</th>
+        <th>Detail</th>
+        <th class="right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if cost_overlay.orchestration_annual_cost is not none %}
+      <tr>
+        <td>Orchestration adoption</td>
+        <td>{{ cost_overlay.orchestration_notes or "Recurring per-tx or annual fees" }}</td>
+        <td class="right mono">{{ fmt(cost_overlay.orchestration_annual_cost) }}/yr</td>
+      </tr>
+      {% endif %}
+      {% if cost_overlay.advisory_fee is not none %}
+      <tr>
+        <td>Revelio advisory</td>
+        <td>One-off engagement fee</td>
+        <td class="right mono">{{ fmt(cost_overlay.advisory_fee) }}</td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+  {% endif %}
+
   <div class="footer">
     <strong style="color:#0D0C0A;">Method:</strong>
     Recoverable revenue = annual loss × recovery rate. Period recoverable scales by timeframe.
-    ROI multiple = period recoverable ÷ implementation cost. Payback = cost ÷ monthly recoverable.
+    Implementation cost defaults to £0; orchestration adoption applies a recurring annual fee that reduces net recovery; advisory is the only one-off cost.
+    ROI multiple = period recoverable ÷ one-off cost (where applicable). Payback = one-off cost ÷ monthly recoverable.
     Low/high band reflects variance around the mid recovery rate; figures are directional and depend on the underlying diagnostic confidence.
   </div>
 </body>
@@ -148,6 +225,9 @@ def _fmt_payback(weeks):
     return (f"{months:.1f}mo", f"~{months/12:.1f} years")
 
 
+_VALID_COST_STATES = {"pure_recovery", "orchestration_only", "advisory_only", "both"}
+
+
 @router.post("/roi/pdf")
 async def generate_roi_pdf(
     payload: dict,
@@ -159,13 +239,16 @@ async def generate_roi_pdf(
     drivers_in = payload.get("drivers") or []
     totals_in = payload.get("totals") or {}
     scenario_range_in = payload.get("scenarioRange") or {}
+    cost_overlay_in = payload.get("costOverlay")
+    cost_state = payload.get("costState") or "pure_recovery"
+    if cost_state not in _VALID_COST_STATES:
+        cost_state = "pure_recovery"
 
     drivers = []
     for d in drivers_in:
         try:
             loss = float(d.get("estimatedLoss") or 0)
             rate = float(d.get("recoveryRate") or 0)
-            cost = float(d.get("implementationCost") or 0)
         except (TypeError, ValueError):
             continue
         recoverable = loss * rate / 100
@@ -173,11 +256,18 @@ async def generate_roi_pdf(
             "category": d.get("category") or "—",
             "estimated_loss": loss,
             "recovery_rate": int(round(rate)),
-            "implementation_cost": cost,
-            "net_annual": recoverable - cost,
+            "net_annual": recoverable,
         })
 
     payback_primary, payback_secondary = _fmt_payback(totals_in.get("paybackWeeks"))
+
+    cost_overlay = None
+    if isinstance(cost_overlay_in, dict):
+        cost_overlay = {
+            "orchestration_annual_cost": cost_overlay_in.get("orchestrationAnnualCost"),
+            "orchestration_notes": cost_overlay_in.get("orchestrationNotes") or "",
+            "advisory_fee": cost_overlay_in.get("advisoryFee"),
+        }
 
     env = Environment(loader=BaseLoader(), autoescape=True)
     template = env.from_string(_ROI_PDF_TEMPLATE)
@@ -187,8 +277,11 @@ async def generate_roi_pdf(
         timeframe_months=timeframe_months,
         drivers=drivers,
         totals={
+            "gross_period_recoverable": float(totals_in.get("grossPeriodRecoverable") or 0),
             "period_recoverable": float(totals_in.get("periodRecoverable") or 0),
             "total_cost": float(totals_in.get("totalCost") or 0),
+            "orch_annual": float(totals_in.get("orchAnnual") or 0),
+            "one_off_cost": float(totals_in.get("oneOffCost") or 0),
             "roi_multiple": totals_in.get("roiMultiple"),
         },
         scenario_range={
@@ -197,6 +290,8 @@ async def generate_roi_pdf(
             "low_roi": scenario_range_in.get("lowRoi"),
             "high_roi": scenario_range_in.get("highRoi"),
         },
+        cost_overlay=cost_overlay,
+        cost_state=cost_state,
         payback_primary=payback_primary,
         payback_secondary=payback_secondary,
         fmt=_fmt_currency,
