@@ -1,8 +1,8 @@
 'use client'
 import React, { useEffect, useMemo, useState } from 'react'
 import AppShell from '@/components/layout/AppShell'
-import { diagnosticsApi, fmtCurrency } from '@/lib/api'
-import { Calculator, FileText, Plus, Trash2, Copy, Check, X, Info, TrendingUp } from 'lucide-react'
+import { diagnosticsApi, fmtCurrency, reportsApi } from '@/lib/api'
+import { Calculator, FileText, Plus, Trash2, Copy, Check, X, Info, TrendingUp, Download, Loader2 } from 'lucide-react'
 
 type Mode = 'diagnostic' | 'manual'
 
@@ -103,6 +103,8 @@ export default function RoiPage() {
   const [copied, setCopied] = useState(false)
   const [demoActive, setDemoActive] = useState(false)
   const [demoBannerDismissed, setDemoBannerDismissed] = useState(false)
+  const [pdfBusy, setPdfBusy] = useState(false)
+  const [pdfError, setPdfError] = useState<string | null>(null)
 
   // Load released diagnostics for the dropdown
   useEffect(() => {
@@ -254,6 +256,45 @@ export default function RoiPage() {
     } catch { /* noop */ }
   }
 
+  const downloadPdf = async () => {
+    if (pdfBusy) return
+    setPdfBusy(true)
+    setPdfError(null)
+    try {
+      const res = await reportsApi.roiPdf({
+        companyName: companyName || 'Scenario',
+        timeframeMonths,
+        drivers,
+        totals: {
+          periodRecoverable: totals.periodRecoverable,
+          totalCost: totals.totalCost,
+          roiMultiple: totals.roiMultiple,
+          paybackWeeks: totals.paybackWeeks,
+        },
+        scenarioRange: {
+          lowRecoverable: totals.low.periodRecoverable,
+          highRecoverable: totals.high.periodRecoverable,
+          lowRoi: totals.low.roiMultiple,
+          highRoi: totals.high.roiMultiple,
+        },
+      })
+      const blob = new Blob([res.data], { type: 'application/pdf' })
+      const slug = (companyName || 'scenario').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'scenario'
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `revelio-roi-${slug}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch {
+      setPdfError('Could not generate PDF, try again or use Copy summary.')
+    } finally {
+      setPdfBusy(false)
+    }
+  }
+
   return (
     <AppShell>
       <div className="max-w-6xl">
@@ -266,10 +307,18 @@ export default function RoiPage() {
             </div>
             <div className="section-sub">Model the commercial return on fixing identified leakage</div>
           </div>
-          <button onClick={copySummary} className="btn-ghost btn-sm">
-            {copied ? <><Check size={13}/> Copied</> : <><Copy size={13}/> Copy summary</>}
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={copySummary} disabled={pdfBusy} className="btn-ghost btn-sm">
+              {copied ? <><Check size={13}/> Copied</> : <><Copy size={13}/> Copy summary</>}
+            </button>
+            <button onClick={downloadPdf} disabled={pdfBusy} className="btn-ghost btn-sm">
+              {pdfBusy ? <><Loader2 size={13} className="animate-spin"/> Generating</> : <><Download size={13}/> Download PDF</>}
+            </button>
+          </div>
         </div>
+        {pdfError && (
+          <div className="text-[12px] text-brand-red mb-3 -mt-2">{pdfError}</div>
+        )}
 
         {/* Mode toggle */}
         <div className="card mb-4">

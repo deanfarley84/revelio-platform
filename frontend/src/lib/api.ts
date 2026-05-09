@@ -94,6 +94,8 @@ export const reportsApi = {
   list: (diagnosticId: string) => api.get(`/reports/${diagnosticId}/exports`),
   download: (diagnosticId: string, exportId: string) =>
     api.get(`/reports/${diagnosticId}/exports/${exportId}/download`, { responseType: 'blob' }),
+  roiPdf: (payload: any) =>
+    api.post('/reports/roi/pdf', payload, { responseType: 'blob' }),
 }
 
 // ── Notifications ─────────────────────────────────────────
