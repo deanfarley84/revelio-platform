@@ -10,7 +10,7 @@ from app.core.database import get_db
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.models.user import UploadedFile, Diagnostic, User
-from app.workers.tasks import parse_uploaded_file
+from app.services.inline_jobs import parse_uploaded_file_inline
 
 router = APIRouter()
 
@@ -95,8 +95,8 @@ async def upload_file(
     await db.commit()
     await db.refresh(file_rec)
 
-    # Queue parsing job
-    parse_uploaded_file.delay(str(file_rec.id))
+    # Parse inline (workers disabled on free tier)
+    await parse_uploaded_file_inline(db, str(file_rec.id))
 
     return {
         "id": str(file_rec.id),

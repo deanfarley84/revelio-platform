@@ -12,7 +12,7 @@ import uuid
 from app.core.database import get_db
 from app.core.auth import get_current_user, require_admin, require_operator
 from app.models.user import Diagnostic, User, Organisation, AuditLog, Notification
-from app.workers.tasks import run_diagnostic_analysis, send_notification
+from app.services.inline_jobs import run_diagnostic_analysis_inline, send_notification_inline
 from app.services.ai_service import classify_confidence
 
 router = APIRouter()
@@ -103,21 +103,23 @@ async def submit_diagnostic(
 
     await db.commit()
 
-    # Queue background analysis
-    run_diagnostic_analysis.delay(str(diag.id))
-
-    # Notify client
-    send_notification.delay(
+    # Notify client (inline)
+    await send_notification_inline(
+        db,
         notification_type="submission_received",
-        context={"org_id": str(diag.org_id), "reference": diag.reference}
+        context={"org_id": str(diag.org_id), "reference": diag.reference},
     )
 
-    # Flag admin if low confidence
+    # Flag admin if low confidence (inline)
     if confidence == "low":
-        send_notification.delay(
+        await send_notification_inline(
+            db,
             notification_type="low_confidence",
-            context={"diagnostic_id": str(diag.id), "reference": diag.reference, "company": diag.company_name}
+            context={"diagnostic_id": str(diag.id), "reference": diag.reference, "company": diag.company_name},
         )
+
+    # Run AI analysis inline (workers disabled on free tier — blocks the request 10–30s)
+    await run_diagnostic_analysis_inline(db, str(diag.id))
 
     return {"status": "submitted", "reference": diag.reference, "confidence_pre_check": confidence}
 
@@ -220,9 +222,10 @@ async def approve_diagnostic(
     await db.commit()
 
     # Notify client
-    send_notification.delay(
+    await send_notification_inline(
+        db,
         notification_type="report_ready",
-        context={"org_id": str(diag.org_id), "reference": diag.reference}
+        context={"org_id": str(diag.org_id), "reference": diag.reference},
     )
 
     return {"status": "released", "reference": diag.reference}
@@ -244,9 +247,10 @@ async def reject_diagnostic(
     diag.operator_notes = payload.get("notes", "")
     await db.commit()
 
-    send_notification.delay(
+    await send_notification_inline(
+        db,
         notification_type="data_required",
-        context={"org_id": str(diag.org_id), "reference": diag.reference}
+        context={"org_id": str(diag.org_id), "reference": diag.reference},
     )
     return {"status": "revision_requested"}
 

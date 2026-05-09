@@ -97,61 +97,57 @@ services:
       - key: CORS_ORIGINS
         sync: false   # set after frontend URL is known
 
-  # ─── Celery worker ─────────────────────────────────────
-  - type: worker
-    name: revelio-worker
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
-    dockerCommand: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2 -Q default,file_parsing,ai_analysis,report_generation
-    plan: free
-    autoDeploy: true
-    envVars:
-      - fromGroup: revelio-shared
-      - key: ENVIRONMENT
-        value: production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: revelio-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: revelio-redis
-          property: connectionString
-      - key: JWT_SECRET
-        fromService:
-          type: web
-          name: revelio-backend
-          envVarKey: JWT_SECRET
-
-  # ─── Celery beat (scheduler) ───────────────────────────
-  - type: worker
-    name: revelio-beat
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
-    dockerCommand: celery -A app.workers.celery_app beat --loglevel=info
-    plan: free
-    autoDeploy: true
-    envVars:
-      - fromGroup: revelio-shared
-      - key: ENVIRONMENT
-        value: production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: revelio-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: revelio-redis
-          property: connectionString
-      - key: JWT_SECRET
-        fromService:
-          type: web
-          name: revelio-backend
-          envVarKey: JWT_SECRET
+  # ─── Celery worker / beat ──────────────────────────────
+  # Disabled on free tier (background workers require paid Starter plan).
+  # Jobs run inline inside API requests via app/services/inline_jobs.py.
+  # To re-enable: uncomment the two worker blocks below and upgrade plan.
+  #
+  # - type: worker
+  #   name: revelio-worker
+  #   runtime: docker
+  #   dockerfilePath: ./backend/Dockerfile
+  #   dockerContext: ./backend
+  #   dockerCommand: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2 -Q default,file_parsing,ai_analysis,report_generation
+  #   plan: starter
+  #   autoDeploy: true
+  #   envVars:
+  #     - fromGroup: revelio-shared
+  #     - key: ENVIRONMENT
+  #       value: production
+  #     - key: DATABASE_URL
+  #       fromDatabase:
+  #         name: revelio-db
+  #         property: connectionString
+  #     - key: REDIS_URL
+  #       fromService:
+  #         type: redis
+  #         name: revelio-redis
+  #         property: connectionString
+  #     - key: JWT_SECRET
+  #       fromService:
+  #         type: web
+  #         name: revelio-backend
+  #         envVarKey: JWT_SECRET
+  #
+  # - type: worker
+  #   name: revelio-beat
+  #   runtime: docker
+  #   dockerfilePath: ./backend/Dockerfile
+  #   dockerContext: ./backend
+  #   dockerCommand: celery -A app.workers.celery_app beat --loglevel=info
+  #   plan: starter
+  #   autoDeploy: true
+  #   envVars:
+  #     - fromGroup: revelio-shared
+  #     - key: DATABASE_URL
+  #       fromDatabase:
+  #         name: revelio-db
+  #         property: connectionString
+  #     - key: REDIS_URL
+  #       fromService:
+  #         type: redis
+  #         name: revelio-redis
+  #         property: connectionString
 
   # ─── Frontend (Next.js) ────────────────────────────────
   - type: web

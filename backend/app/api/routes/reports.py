@@ -8,7 +8,7 @@ from app.core.database import get_db
 from app.core.auth import get_current_user, require_operator
 from app.core.config import settings
 from app.models.user import Diagnostic, ReportExport, User
-from app.workers.tasks import generate_report
+from app.services.inline_jobs import generate_report_inline
 
 router = APIRouter()
 
@@ -31,8 +31,10 @@ async def trigger_report_generation(
     if not is_admin and diag.status != "released":
         raise HTTPException(403, "Report not yet released")
 
-    generate_report.delay(diagnostic_id, export_type, str(current_user.id), is_internal)
-    return {"status": "generating", "type": export_type}
+    result = await generate_report_inline(db, diagnostic_id, export_type, str(current_user.id), is_internal)
+    if result.get("error"):
+        raise HTTPException(500, result["error"])
+    return {"status": "generated", "type": export_type, "storage_key": result.get("storage_key")}
 
 
 @router.get("/{diagnostic_id}/exports")
