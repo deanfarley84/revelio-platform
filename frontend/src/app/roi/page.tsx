@@ -416,15 +416,25 @@ export default function RoiPage() {
               <div>
                 <div className="kpi-label mb-1">Cost of inaction</div>
                 <div className="text-[13px] text-ink/85 leading-relaxed">
-                  Over the next {timeframeMonths} months, doing nothing leaves <span className="font-medium">{fmtCurrency(totals.periodRecoverable)}</span> on the table.
-                  One-off implementation of <span className="font-medium">{fmtCurrency(totals.totalCost)}</span> recovers <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.totalCost)}</span> over that period.
+                  {totals.totalCost > 0 ? (
+                    <>
+                      Over the next {timeframeMonths} months, doing nothing leaves <span className="font-medium">{fmtCurrency(totals.periodRecoverable)}</span> on the table.
+                      One-off implementation of <span className="font-medium">{fmtCurrency(totals.totalCost)}</span> recovers <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.totalCost)}</span> over that period.
+                    </>
+                  ) : (
+                    <>
+                      Over the next {timeframeMonths} months, doing nothing leaves <span className="font-medium">{fmtCurrency(totals.periodRecoverable)}</span> on the table.
+                      Recovering this typically requires no additional spend, just configuration changes or vendor conversations.
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Summary bar (KPIs) */}
+        {/* Summary bar (KPIs). Pure-recovery frame when no costs are active;
+            classic implementation/ROI/payback frame once an overlay introduces a cost. */}
         <div className="grid grid-cols-4 gap-3 mb-4">
           <div className="kpi-card">
             <div className="kpi-label">Recoverable ({timeframeMonths}m)</div>
@@ -433,25 +443,50 @@ export default function RoiPage() {
               {fmtCurrency(totals.low.periodRecoverable)}–{fmtCurrency(totals.high.periodRecoverable)} range
             </div>
           </div>
-          <div className="kpi-card">
-            <div className="kpi-label">Implementation cost</div>
-            <div className="kpi-value">{fmtCurrency(totals.totalCost)}</div>
-            <div className="text-[10.5px] text-ink/45 mt-1">One-off</div>
-          </div>
-          <div className="kpi-card">
-            <div className="kpi-label">ROI multiple</div>
-            <div className="kpi-value">{totals.roiMultiple != null ? `${totals.roiMultiple.toFixed(1)}x` : '—'}</div>
-            <div className="text-[10.5px] text-ink/45 mt-1">
-              {totals.roiMultiple != null && totals.low.roiMultiple != null && totals.high.roiMultiple != null
-                ? `${totals.low.roiMultiple.toFixed(1)}x – ${totals.high.roiMultiple.toFixed(1)}x range`
-                : 'Period return ÷ cost'}
-            </div>
-          </div>
-          <div className="kpi-card">
-            <div className="kpi-label">Payback</div>
-            <div className="kpi-value">{formatPayback(totals.paybackWeeks).primary}</div>
-            <div className="text-[10.5px] text-ink/45 mt-1">{formatPayback(totals.paybackWeeks).secondary}</div>
-          </div>
+          {totals.totalCost > 0 ? (
+            <>
+              <div className="kpi-card">
+                <div className="kpi-label">Implementation cost</div>
+                <div className="kpi-value">{fmtCurrency(totals.totalCost)}</div>
+                <div className="text-[10.5px] text-ink/45 mt-1">One-off</div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-label">ROI multiple</div>
+                <div className="kpi-value">{totals.roiMultiple != null ? `${totals.roiMultiple.toFixed(1)}x` : '—'}</div>
+                <div className="text-[10.5px] text-ink/45 mt-1">
+                  {totals.roiMultiple != null && totals.low.roiMultiple != null && totals.high.roiMultiple != null
+                    ? `${totals.low.roiMultiple.toFixed(1)}x – ${totals.high.roiMultiple.toFixed(1)}x range`
+                    : 'Period return ÷ cost'}
+                </div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-label">Payback</div>
+                <div className="kpi-value">{formatPayback(totals.paybackWeeks).primary}</div>
+                <div className="text-[10.5px] text-ink/45 mt-1">{formatPayback(totals.paybackWeeks).secondary}</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="kpi-card">
+                <div className="kpi-label">Cost to recover</div>
+                <div className="kpi-value flex items-center gap-2">
+                  <span>£0</span>
+                  <span className="tag tag-green">Pure recovery</span>
+                </div>
+                <div className="text-[10.5px] text-ink/45 mt-1">No spend required</div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-label">Recovery type</div>
+                <div className="kpi-value text-[18px]">Pure recovery</div>
+                <div className="text-[10.5px] text-ink/45 mt-1">Configuration and vendor changes</div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-label">Recovery starts</div>
+                <div className="kpi-value text-[18px]">Immediately</div>
+                <div className="text-[10.5px] text-ink/45 mt-1">No payback period</div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Drivers table */}
@@ -469,7 +504,7 @@ export default function RoiPage() {
                 <th>Driver</th>
                 <th className="text-right">Annual loss</th>
                 <th>Recovery rate</th>
-                <th className="text-right">Implementation cost</th>
+                {totals.totalCost > 0 && <th className="text-right">Implementation cost</th>}
                 <th className="text-right">Net annual</th>
                 {mode === 'manual' && <th></th>}
               </tr>
@@ -534,22 +569,24 @@ export default function RoiPage() {
                         <div className="text-[10px] text-ink/40 mt-0.5">Capped at {matchedCeiling}%, industry-realistic for this driver</div>
                       )}
                     </td>
-                    <td className="text-right">
-                      <input
-                        type="number"
-                        className="input py-1 text-[12px] text-right font-mono w-32 ml-auto"
-                        value={d.implementationCost || ''}
-                        onChange={e => updateDriver(d.id, { implementationCost: Number(e.target.value) || 0 })}
-                        placeholder="0"
-                      />
-                      {meta && (
-                        <div className="text-[10.5px] text-ink/45 mt-0.5 font-mono">
-                          Typical: {fmtCurrency(meta.costRange[0])}–{fmtCurrency(meta.costRange[1])}
-                        </div>
-                      )}
-                    </td>
-                    <td className={`text-right font-mono font-medium ${netAnnual >= 0 ? 'text-brand-green' : 'text-brand-red'}`}>
-                      {fmtCurrency(netAnnual)}
+                    {totals.totalCost > 0 && (
+                      <td className="text-right">
+                        <input
+                          type="number"
+                          className="input py-1 text-[12px] text-right font-mono w-32 ml-auto"
+                          value={d.implementationCost || ''}
+                          onChange={e => updateDriver(d.id, { implementationCost: Number(e.target.value) || 0 })}
+                          placeholder="0"
+                        />
+                        {meta && (
+                          <div className="text-[10.5px] text-ink/45 mt-0.5 font-mono">
+                            Typical: {fmtCurrency(meta.costRange[0])}–{fmtCurrency(meta.costRange[1])}
+                          </div>
+                        )}
+                      </td>
+                    )}
+                    <td className={`text-right font-mono font-medium ${recoverable >= 0 ? 'text-brand-green' : 'text-brand-red'}`}>
+                      {fmtCurrency(totals.totalCost > 0 ? netAnnual : recoverable)}
                     </td>
                     {mode === 'manual' && (
                       <td className="text-right">
@@ -562,7 +599,7 @@ export default function RoiPage() {
                 )
               })}
               {drivers.length === 0 && (
-                <tr><td colSpan={mode === 'manual' ? 6 : 5} className="text-center text-ink/40 py-6">No drivers — {mode === 'manual' ? 'add one above' : 'select a diagnostic'}.</td></tr>
+                <tr><td colSpan={(totals.totalCost > 0 ? 5 : 4) + (mode === 'manual' ? 1 : 0)} className="text-center text-ink/40 py-6">No drivers, {mode === 'manual' ? 'add one above' : 'select a diagnostic'}.</td></tr>
               )}
             </tbody>
           </table>
