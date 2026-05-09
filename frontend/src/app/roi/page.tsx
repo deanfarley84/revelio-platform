@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import AppShell from '@/components/layout/AppShell'
 import { diagnosticsApi, fmtCurrency } from '@/lib/api'
-import { Calculator, FileText, Plus, Trash2, Copy, Check, X } from 'lucide-react'
+import { Calculator, FileText, Plus, Trash2, Copy, Check, X, Info } from 'lucide-react'
 
 type Mode = 'diagnostic' | 'manual'
 
@@ -31,6 +31,46 @@ const DEMO_DRIVERS: Driver[] = [
   { id: 'demo4', category: 'Retry logic',              estimatedLoss: 95000,  recoveryRate: 80, implementationCost: 12000 },
 ]
 const DEMO_COMPANY = 'Acme Retail (example)'
+
+// Plain-English explainers and typical implementation cost ranges,
+// surfaced as tooltips and per-row hints so merchants understand what
+// each driver represents and what to budget. Categories are matched
+// fuzzily so diagnostic-derived names that vary slightly still resolve.
+const DRIVER_META: Record<string, { explainer: string; costRange: [number, number] }> = {
+  'authorisation loss': {
+    explainer: 'Approved transactions you are not capturing because the issuer declined.',
+    costRange: [15000, 60000],
+  },
+  'cross-border performance': {
+    explainer: 'Lost approvals on international transactions due to acquirer setup or routing.',
+    costRange: [10000, 40000],
+  },
+  'fx leakage': {
+    explainer: 'Margin lost to FX spread or settlement currency mismatch.',
+    costRange: [5000, 25000],
+  },
+  'retry logic': {
+    explainer: 'Soft declines that could be recovered with smarter retry timing or network tokens.',
+    costRange: [8000, 30000],
+  },
+  'routing inefficiency': {
+    explainer: 'Performance loss from single-PSP dependency or absence of failover.',
+    costRange: [20000, 80000],
+  },
+  'chargeback admin': {
+    explainer: 'Operational overhead and revenue loss from disputes and refunds.',
+    costRange: [10000, 50000],
+  },
+  'payment method gaps': {
+    explainer: 'Missed conversion from absent local payment methods in key markets.',
+    costRange: [15000, 60000],
+  },
+}
+
+function lookupDriverMeta(category: string) {
+  const k = (category || '').toLowerCase()
+  return Object.entries(DRIVER_META).find(([key]) => k.includes(key.split(' ')[0]))?.[1]
+}
 
 export default function RoiPage() {
   const [mode, setMode] = useState<Mode>('diagnostic')
@@ -319,6 +359,7 @@ export default function RoiPage() {
               {drivers.map(d => {
                 const recoverable = d.estimatedLoss * d.recoveryRate / 100
                 const netAnnual = recoverable - d.implementationCost
+                const meta = lookupDriverMeta(d.category)
                 return (
                   <tr key={d.id}>
                     <td>
@@ -326,6 +367,16 @@ export default function RoiPage() {
                         ? <input className="input py-1 text-[12px]" value={d.category} onChange={e => updateDriver(d.id, { category: e.target.value })} />
                         : <div className="flex items-center gap-2">
                             <span>{d.category}</span>
+                            {meta && (
+                              <span className="group relative inline-flex" tabIndex={0}>
+                                <Info size={12} className="text-ink/40" aria-label={meta.explainer}>
+                                  <title>{meta.explainer}</title>
+                                </Info>
+                                <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block group-focus-within:block z-10 w-56 bg-ink text-white text-[11px] rounded-md px-2.5 py-1.5 shadow-md leading-snug pointer-events-none">
+                                  {meta.explainer}
+                                </span>
+                              </span>
+                            )}
                             {d.confidence && <span className={`tag ${d.confidence === 'high' ? 'tag-green' : d.confidence === 'medium' ? 'tag-amber' : 'tag-red'}`}>{d.confidence}</span>}
                           </div>
                       }
@@ -361,6 +412,11 @@ export default function RoiPage() {
                         onChange={e => updateDriver(d.id, { implementationCost: Number(e.target.value) || 0 })}
                         placeholder="0"
                       />
+                      {meta && (
+                        <div className="text-[10.5px] text-ink/45 mt-0.5 font-mono">
+                          Typical: {fmtCurrency(meta.costRange[0])}–{fmtCurrency(meta.costRange[1])}
+                        </div>
+                      )}
                     </td>
                     <td className={`text-right font-mono font-medium ${netAnnual >= 0 ? 'text-brand-green' : 'text-brand-red'}`}>
                       {fmtCurrency(netAnnual)}
