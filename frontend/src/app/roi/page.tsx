@@ -424,24 +424,28 @@ export default function RoiPage() {
           )}
         </div>
 
-        {/* Cost of inaction framing. Hidden when there is nothing to model. */}
-        {totals.periodRecoverable > 0 && (
+        {/* Cost of inaction framing. Copy adapts to the four overlay
+            permutations (pure / orch-only / advisory-only / both).
+            Hidden when there is no recoverable revenue to model. */}
+        {totals.grossPeriodRecoverable > 0 && (
           <div className="card mb-4">
             <div className="flex items-start gap-3">
               <TrendingUp size={14} className="text-ink/55 mt-0.5 shrink-0" />
               <div>
                 <div className="kpi-label mb-1">Cost of inaction</div>
                 <div className="text-[13px] text-ink/85 leading-relaxed">
-                  {totals.totalCost > 0 ? (
-                    <>
-                      Over the next {timeframeMonths} months, doing nothing leaves <span className="font-medium">{fmtCurrency(totals.periodRecoverable)}</span> on the table.
-                      One-off implementation of <span className="font-medium">{fmtCurrency(totals.totalCost)}</span> recovers <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.totalCost)}</span> over that period.
-                    </>
-                  ) : (
-                    <>
-                      Over the next {timeframeMonths} months, doing nothing leaves <span className="font-medium">{fmtCurrency(totals.periodRecoverable)}</span> on the table.
-                      Recovering this typically requires no additional spend, just configuration changes or vendor conversations.
-                    </>
+                  Over the next {timeframeMonths} months, doing nothing leaves <span className="font-medium">{fmtCurrency(totals.grossPeriodRecoverable)}</span> on the table.{' '}
+                  {!totals.hasAnyCost && (
+                    <>Recovering it costs £0, most fixes are configuration changes or conversations with your existing providers.</>
+                  )}
+                  {totals.hasAnyCost && totals.orchAnnual > 0 && totals.oneOffCost === 0 && (
+                    <>Recovering it requires <span className="font-medium">{fmtCurrency(totals.orchAnnual)}/year</span> in orchestration fees, netting <span className="font-medium">{fmtCurrency(totals.periodRecoverable)}</span> over that period.</>
+                  )}
+                  {totals.hasAnyCost && totals.orchAnnual === 0 && totals.oneOffCost > 0 && (
+                    <>One-off advisory of <span className="font-medium">{fmtCurrency(totals.oneOffCost)}</span> recovers <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.oneOffCost)}</span> net.</>
+                  )}
+                  {totals.hasAnyCost && totals.orchAnnual > 0 && totals.oneOffCost > 0 && (
+                    <><span className="font-medium">{fmtCurrency(totals.oneOffCost)}</span> advisory plus <span className="font-medium">{fmtCurrency(totals.orchAnnual)}/year</span> fees recover <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.oneOffCost)}</span> net.</>
                   )}
                 </div>
               </div>
