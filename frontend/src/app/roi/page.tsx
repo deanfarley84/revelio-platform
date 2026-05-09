@@ -72,6 +72,26 @@ function lookupDriverMeta(category: string) {
   return Object.entries(DRIVER_META).find(([key]) => k.includes(key.split(' ')[0]))?.[1]
 }
 
+// Per-driver realistic recovery ceilings. Stops sales conversations
+// with sliders dragged to 100% that buyers will dismiss.
+const RECOVERY_CEILING: Record<string, number> = {
+  'auth': 80,
+  'cross': 60,
+  'fx': 90,
+  'retry': 90,
+  'routing': 70,
+  'chargeback': 65,
+  'payment method': 55,
+}
+
+function ceilingFor(category: string): number {
+  const c = (category || '').toLowerCase()
+  for (const [key, val] of Object.entries(RECOVERY_CEILING)) {
+    if (c.includes(key)) return val
+  }
+  return 95
+}
+
 export default function RoiPage() {
   const [mode, setMode] = useState<Mode>('diagnostic')
   const [diagnostics, setDiagnostics] = useState<any[]>([])
@@ -140,7 +160,7 @@ export default function RoiPage() {
       id: `b${i}`,
       category: b.category || `Driver ${i + 1}`,
       estimatedLoss: Number(b.estimated_loss) || 0,
-      recoveryRate: defaultRecoveryRate(b.category),
+      recoveryRate: Math.min(defaultRecoveryRate(b.category), ceilingFor(b.category)),
       implementationCost: 0,
       confidence: b.confidence,
     }))
@@ -360,6 +380,14 @@ export default function RoiPage() {
                 const recoverable = d.estimatedLoss * d.recoveryRate / 100
                 const netAnnual = recoverable - d.implementationCost
                 const meta = lookupDriverMeta(d.category)
+                const matchedCeiling = (() => {
+                  const c = (d.category || '').toLowerCase()
+                  for (const [key, val] of Object.entries(RECOVERY_CEILING)) {
+                    if (c.includes(key)) return val
+                  }
+                  return null
+                })()
+                const sliderMax = matchedCeiling ?? 95
                 return (
                   <tr key={d.id}>
                     <td>
@@ -395,14 +423,17 @@ export default function RoiPage() {
                         <input
                           type="range"
                           min={0}
-                          max={100}
-                          value={d.recoveryRate}
+                          max={sliderMax}
+                          value={Math.min(d.recoveryRate, sliderMax)}
                           onChange={e => updateDriver(d.id, { recoveryRate: Number(e.target.value) })}
                           className="flex-1 accent-ink"
                         />
-                        <span className="font-mono text-[11.5px] text-ink/70 w-10 text-right">{d.recoveryRate}%</span>
+                        <span className="font-mono text-[11.5px] text-ink/70 w-10 text-right">{Math.min(d.recoveryRate, sliderMax)}%</span>
                       </div>
                       <div className="text-[10.5px] text-ink/45 mt-0.5 font-mono">{fmtCurrency(recoverable)} recoverable</div>
+                      {matchedCeiling !== null && (
+                        <div className="text-[10px] text-ink/40 mt-0.5">Capped at {matchedCeiling}%, industry-realistic for this driver</div>
+                      )}
                     </td>
                     <td className="text-right">
                       <input
