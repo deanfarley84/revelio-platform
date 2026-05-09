@@ -176,7 +176,9 @@ export default function RoiPage() {
   const totals = useMemo(() => {
     const orchAnnual = orchestrationCost ?? 0
     const oneOffCost = advisoryFee ?? 0
-    const hasAnyCost = orchestrationCost !== null || advisoryFee !== null
+    // Visible overlay rows with no value typed yet should not flip the page
+    // out of pure-recovery framing. Flip only once a real number is entered.
+    const hasAnyCost = orchAnnual > 0 || oneOffCost > 0
 
     const grossAnnualForFactor = (factor: number) =>
       drivers.reduce((sum, d) => {
