@@ -446,8 +446,8 @@ export default function RoiPage() {
           </div>
           <div className="kpi-card">
             <div className="kpi-label">Payback</div>
-            <div className="kpi-value">{totals.paybackWeeks != null ? `${totals.paybackWeeks.toFixed(1)}w` : '—'}</div>
-            <div className="text-[10.5px] text-ink/45 mt-1">{totals.paybackWeeks != null ? `~${(totals.paybackWeeks / 4.33).toFixed(1)} months` : 'No cost entered'}</div>
+            <div className="kpi-value">{formatPayback(totals.paybackWeeks).primary}</div>
+            <div className="text-[10.5px] text-ink/45 mt-1">{formatPayback(totals.paybackWeeks).secondary}</div>
           </div>
         </div>
 
@@ -574,6 +574,21 @@ export default function RoiPage() {
       </div>
     </AppShell>
   )
+}
+
+// Smart time-unit formatting for payback. Days for very fast paybacks,
+// weeks for the typical band, months for slow, years for outliers.
+function formatPayback(weeks: number | null): { primary: string; secondary: string } {
+  if (weeks == null) return { primary: '—', secondary: 'No cost entered' }
+  const days = weeks * 7
+  const months = weeks / 4.33
+  if (days < 14) {
+    return { primary: `${Math.round(days)}d`, secondary: `~${weeks.toFixed(1)} weeks` }
+  }
+  if (weeks < 52) {
+    return { primary: `${weeks.toFixed(1)}w`, secondary: `~${months.toFixed(1)} months` }
+  }
+  return { primary: `${months.toFixed(1)}mo`, secondary: `~${(months / 12).toFixed(1)} years` }
 }
 
 // Heuristic default recovery rates by category
