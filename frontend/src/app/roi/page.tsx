@@ -23,12 +23,15 @@ const DEFAULT_DRIVERS: Driver[] = [
 ]
 
 // Mid-market UK retailer scenario, used when the dashboard has no released
-// diagnostics yet so the calculator is never shown empty.
+// diagnostics yet so the calculator is never shown empty. Implementation
+// cost defaults to zero across the board; payments leakage fixes are
+// overwhelmingly configuration changes or vendor conversations rather
+// than things the merchant has to "buy".
 const DEMO_DRIVERS: Driver[] = [
-  { id: 'demo1', category: 'Authorisation loss',       estimatedLoss: 480000, recoveryRate: 60, implementationCost: 25000 },
-  { id: 'demo2', category: 'Cross-border performance', estimatedLoss: 180000, recoveryRate: 40, implementationCost: 15000 },
-  { id: 'demo3', category: 'FX leakage',               estimatedLoss: 220000, recoveryRate: 70, implementationCost: 8000 },
-  { id: 'demo4', category: 'Retry logic',              estimatedLoss: 95000,  recoveryRate: 80, implementationCost: 12000 },
+  { id: 'demo1', category: 'Authorisation loss',       estimatedLoss: 480000, recoveryRate: 60, implementationCost: 0 },
+  { id: 'demo2', category: 'Cross-border performance', estimatedLoss: 180000, recoveryRate: 40, implementationCost: 0 },
+  { id: 'demo3', category: 'FX leakage',               estimatedLoss: 220000, recoveryRate: 70, implementationCost: 0 },
+  { id: 'demo4', category: 'Retry logic',              estimatedLoss: 95000,  recoveryRate: 80, implementationCost: 0 },
 ]
 const DEMO_COMPANY = 'Acme Retail (example)'
 
@@ -323,11 +326,11 @@ export default function RoiPage() {
         {/* Mode toggle */}
         <div className="card mb-4">
           {demoActive && !demoBannerDismissed && (
-            <div className="bg-surface-2 rounded-md px-3 py-2 mb-3 flex items-center justify-between text-[12px] text-ink/70">
-              <span>Showing example data. Submit a diagnostic or switch to Manual to model your own scenario.</span>
+            <div className="bg-surface-2 rounded-md px-3 py-2 mb-3 flex items-start justify-between text-[12px] text-ink/70 gap-3">
+              <span>Showing example data. The cost to recover is £0, most fixes are configuration changes or conversations with providers. Add costs only if orchestration or advisory apply.</span>
               <button
                 onClick={() => setDemoBannerDismissed(true)}
-                className="text-ink/40 hover:text-ink/70 ml-3"
+                className="text-ink/40 hover:text-ink/70 mt-0.5 shrink-0"
                 aria-label="Dismiss example banner"
               >
                 <X size={12}/>
