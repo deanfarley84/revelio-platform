@@ -35,6 +35,18 @@ class Settings(BaseSettings):
     # Reference prefix
     DIAGNOSTIC_REF_PREFIX: str = "RVL"
 
+    # Email transport (optional). When SMTP_HOST is unset the email service
+    # logs intent and no-ops, so invitations / notifications still work but
+    # link delivery is manual until a provider is wired up.
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_USE_TLS: bool = True
+    EMAIL_FROM: str = "no-reply@revion.io"
+    EMAIL_FROM_NAME: str = "Revion"
+    PUBLIC_APP_URL: str = "https://revelio-frontend-38kb.onrender.com"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,

@@ -83,14 +83,9 @@ async def seed_test_data_endpoint(
     current_user: User = Depends(require_super_admin),
 ):
     """Seed three demo merchant orgs end to end. Super_admin only.
-    Refuses if any real (non-demo) client organisation already exists."""
-    result = await seed_test_data(db, super_admin_id=str(current_user.id))
-    if result.get("error") == "real_client_orgs_present":
-        raise HTTPException(
-            status_code=409,
-            detail=result.get("message", "Real client orgs present; refusing to seed."),
-        )
-    return result
+    Idempotent: wipes prior is_demo=True rows then rebuilds. Real
+    client orgs are never touched."""
+    return await seed_test_data(db, super_admin_id=str(current_user.id))
 
 
 @router.delete("/seed-test-data")

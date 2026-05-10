@@ -11,7 +11,7 @@ from app.core.config import settings
 from app.core.database import engine, Base, AsyncSessionLocal
 from app.core.middleware import RequestContextMiddleware
 from app.core.rate_limit import limiter
-from app.api.routes import auth, diagnostics, files, admin, benchmarks, intel, reports, notifications
+from app.api.routes import auth, diagnostics, files, admin, benchmarks, intel, reports, notifications, invitations
 
 logger = logging.getLogger("revelio")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -104,6 +104,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
+app.include_router(invitations.router, prefix="/api/v1/invitations", tags=["Invitations"])
 app.include_router(diagnostics.router, prefix="/api/v1/diagnostics", tags=["Diagnostics"])
 app.include_router(files.router, prefix="/api/v1/files", tags=["Files"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])

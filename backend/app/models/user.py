@@ -227,3 +227,17 @@ class ReportExport(Base):
     generated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     is_internal = Column(Boolean, default=False)
     generated_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Invitation(Base):
+    __tablename__ = "invitations"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organisations.id", ondelete="CASCADE"), nullable=False)
+    email = Column(Text, nullable=False)
+    role = Column(Text, nullable=False, default="client_viewer")
+    token = Column(Text, nullable=False, unique=True)
+    invited_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    accepted_at = Column(DateTime(timezone=True))
+    accepted_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

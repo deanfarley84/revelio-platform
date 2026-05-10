@@ -334,7 +334,10 @@ _DEMO_ORGS = [
 
 
 async def has_real_client_orgs(db: AsyncSession) -> bool:
-    """True if any non-demo org has a client_admin or client_viewer user."""
+    """True if any non-demo org has a client_admin or client_viewer user.
+    Kept for diagnostics / future use; no longer gates seed_test_data
+    because the seed only ever creates and wipes is_demo rows so cannot
+    collide with real client data."""
     q = (
         select(func.count(distinct(User.org_id)))
         .join(Organisation, Organisation.id == User.org_id)
@@ -346,15 +349,10 @@ async def has_real_client_orgs(db: AsyncSession) -> bool:
 
 async def seed_test_data(db: AsyncSession, super_admin_id: str) -> dict[str, Any]:
     """
-    Build three demo merchant orgs end to end. Refuses if any real client
-    org exists. Wipes prior demo data first so re-running is clean.
+    Build three demo merchant orgs end to end. Idempotent: wipes prior
+    demo data first then rebuilds. Touches only is_demo=True rows, so
+    real client orgs are never affected.
     """
-    if await has_real_client_orgs(db):
-        return {
-            "error": "real_client_orgs_present",
-            "message": "Refused: a non-demo client organisation already exists in this database.",
-        }
-
     # Clean re-seed: remove any existing demo orgs so the run is idempotent.
     wipe_summary = await wipe_test_data(db)
 
