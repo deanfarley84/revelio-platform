@@ -53,6 +53,20 @@ PDF_TEMPLATE = """
   .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #E8E6E0; font-size: 10px; color: #95928A; display: flex; justify-content: space-between; }
   .internal-banner { background: #FDF2DC; border: 1px solid rgba(122,76,8,0.25); border-radius: 6px; padding: 10px 14px; font-size: 11px; color: #7A4C08; margin-bottom: 20px; font-weight: 600; }
   .internal-notes { background: #FDF2DC; border-left: 3px solid #7A4C08; border-radius: 0 6px 6px 0; padding: 12px 14px; font-size: 11.5px; color: #524F48; margin-top: 8px; }
+  .cta-section { margin-top: 28px; padding-top: 22px; border-top: 1px solid #E8E6E0; }
+  .cta-pain-narrative { background: #F5F4F1; border-left: 3px solid #1A1830; border-radius: 0 6px 6px 0; padding: 14px 16px; font-size: 12px; color: #524F48; line-height: 1.65; margin-bottom: 14px; }
+  .cta-subheader { font-size: 11.5px; color: #524F48; margin-bottom: 6px; }
+  .cta-pain-list { list-style: none; padding: 0; margin: 0 0 18px 0; }
+  .cta-pain-list li { padding: 4px 0 4px 16px; position: relative; font-size: 11.5px; color: #524F48; line-height: 1.55; }
+  .cta-pain-list li::before { content: "—"; position: absolute; left: 0; color: #95928A; }
+  .cta-outcome { padding: 10px 14px; border: 1px solid #E8E6E0; border-radius: 6px; margin-bottom: 8px; }
+  .cta-outcome-label { font-size: 11px; font-weight: 700; color: #1A1830; margin-bottom: 3px; }
+  .cta-outcome-body { font-size: 11px; color: #524F48; line-height: 1.55; }
+  .cta-block { background: #1A1830; color: white; border-radius: 8px; padding: 18px 22px; margin-top: 18px; }
+  .cta-headline { font-size: 14px; font-weight: 700; color: white; margin-bottom: 6px; letter-spacing: -0.01em; }
+  .cta-body { font-size: 11.5px; color: rgba(255,255,255,0.78); line-height: 1.55; margin-bottom: 12px; }
+  .cta-contact-row { font-size: 11px; color: rgba(255,255,255,0.88); margin: 3px 0; }
+  .cta-contact-label { color: rgba(255,255,255,0.5); display: inline-block; width: 60px; }
 </style>
 </head>
 <body>
@@ -163,6 +177,50 @@ PDF_TEMPLATE = """
   {% if is_internal and operator_notes %}
   <h2>Operator notes (internal only)</h2>
   <div class="internal-notes">{{ operator_notes }}</div>
+  {% endif %}
+
+  {% if not is_internal %}
+  <div class="cta-section">
+    <h2>The path forward</h2>
+    <div class="cta-pain-narrative">
+      You have seen where revenue is leaking. The harder question is what to do about it without committing your engineering roadmap to a six-month build, or putting trust in a provider whose commercial incentives may not fully align with yours.
+    </div>
+    <div class="cta-subheader">You are likely sitting with a familiar set of frustrations:</div>
+    <ul class="cta-pain-list">
+      <li>Multiple PSPs, each pulling in a slightly different direction.</li>
+      <li>An authorisation rate you cannot quite explain, let alone improve.</li>
+      <li>A board or CFO asking pointed questions, with no defensible answer.</li>
+      <li>A tech team whose backlog is already full.</li>
+      <li>A creeping sense that the stack has not had an honest, independent review in years.</li>
+    </ul>
+
+    <h2>What Revelio delivers</h2>
+    <div class="cta-outcome">
+      <div class="cta-outcome-label">Provider-agnostic by design</div>
+      <div class="cta-outcome-body">No commercial relationship with any PSP, orchestrator, or acquirer. The strategy works for you, not the providers.</div>
+    </div>
+    <div class="cta-outcome">
+      <div class="cta-outcome-label">Immediate impact, no integration burden</div>
+      <div class="cta-outcome-body">Most of the recoverable revenue is unlocked through configuration changes and contract conversations you already have the rights to make. No build, no multi-month tech project, no in-house roadmap cost.</div>
+    </div>
+    <div class="cta-outcome">
+      <div class="cta-outcome-label">Right tool, right time</div>
+      <div class="cta-outcome-body">When new infrastructure is genuinely the answer, we connect you with the partner that fits your specific shape, not whoever pays the highest referral fee.</div>
+    </div>
+    <div class="cta-outcome">
+      <div class="cta-outcome-label">Numbers you can take to a board</div>
+      <div class="cta-outcome-body">Documented methodology, confidence-rated estimates, defensible under scrutiny.</div>
+    </div>
+
+    <div class="cta-block">
+      <div class="cta-headline">Next step: speak with Revelio</div>
+      <div class="cta-body">A 30-minute conversation with Dean Farley, founder. Independent, provider-agnostic, focused on outcomes you can defend at board level.</div>
+      <div class="cta-contact-row"><span class="cta-contact-label">Email</span> deanfarley84@gmail.com</div>
+      <div class="cta-contact-row"><span class="cta-contact-label">UK</span> +44 (0) 7583 002 267</div>
+      <div class="cta-contact-row"><span class="cta-contact-label">Spain</span> +34 711 018 011</div>
+      <div class="cta-contact-row"><span class="cta-contact-label">LinkedIn</span> linkedin.com/in/df2024</div>
+    </div>
+  </div>
   {% endif %}
 
   <div class="footer">
