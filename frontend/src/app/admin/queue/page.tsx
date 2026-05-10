@@ -62,6 +62,7 @@ export default function QueuePage() {
                   <div>
                     <div className="flex items-center gap-2.5 flex-wrap">
                       <div className="text-[14px] font-medium">{d.company_name}</div>
+                      {d.is_demo && <span className="tag tag-amber text-[9.5px]">DEMO</span>}
                       <span className={`tier-${d.tier}`}>{d.tier?.toUpperCase()}</span>
                       <span className={`tag ${isLowConf?'tag-red':'tag-amber'}`}>{isLowConf?'Low confidence':'Pending approval'}</span>
                       <span className={`text-[11.5px] font-medium ${confidenceColour(ai.confidence_level)}`}>Confidence: {ai.confidence_level||'—'}</span>

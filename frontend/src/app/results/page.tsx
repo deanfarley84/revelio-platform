@@ -29,7 +29,12 @@ export default function ResultsPage() {
                   const est = o.annual_leakage_estimate || {}
                   return (
                     <tr key={d.id}>
-                      <td className="font-mono text-[11.5px]">{d.reference}</td>
+                      <td className="font-mono text-[11.5px]">
+                        <span className="inline-flex items-center gap-1.5">
+                          {d.reference}
+                          {d.is_demo && <span className="tag tag-amber text-[9.5px]">DEMO</span>}
+                        </span>
+                      </td>
                       <td className="text-ink/50">{d.submitted_at ? new Date(d.submitted_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'}</td>
                       <td><span className={`tier-${d.tier}`}>{d.tier?.toUpperCase()}</span></td>
                       <td><span className={`dot ${statusColour(d.status)}`}/>{d.status?.replace(/_/g,' ')}</td>

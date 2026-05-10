@@ -41,7 +41,10 @@ export default function AdminPage() {
             {pipeline.slice(0,7).map((d:any)=>(
               <div key={d.id} className="flex items-center gap-3 py-2.5 border-b border-black/[0.05] last:border-0">
                 <div className="flex-1 min-w-0">
-                  <div className="text-[12.5px] font-medium truncate">{d.company_name}</div>
+                  <div className="text-[12.5px] font-medium truncate flex items-center gap-1.5">
+                    <span className="truncate">{d.company_name}</span>
+                    {d.is_demo && <span className="tag tag-amber text-[9.5px] shrink-0">DEMO</span>}
+                  </div>
                   <div className="text-[11px] text-ink/40">{d.tier?.toUpperCase()} · {d.submitted_at?new Date(d.submitted_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):''}</div>
                 </div>
                 {stageTag(d.status)}
@@ -56,7 +59,12 @@ export default function AdminPage() {
               <tbody>
                 {top.slice(0,6).map((d:any)=>(
                   <tr key={d.id}>
-                    <td className="font-medium">{d.org_name||d.company_name}</td>
+                    <td className="font-medium">
+                      <span className="inline-flex items-center gap-1.5">
+                        {d.org_name||d.company_name}
+                        {d.is_demo && <span className="tag tag-amber text-[9.5px]">DEMO</span>}
+                      </span>
+                    </td>
                     <td><span className={`tier-${d.tier}`}>{d.tier?.toUpperCase()}</span></td>
                     <td className="font-mono">{fmtCurrency(d.leakage_mid)}</td>
                     <td className="capitalize text-ink/60 text-[11px]">{d.status?.replace(/_/g,' ')}</td>

@@ -309,6 +309,7 @@ def _serialise_diagnostic(d: Diagnostic, user: User) -> dict:
         "org_id": str(d.org_id),
         "tier": d.tier,
         "status": d.status,
+        "is_demo": bool(getattr(d, "is_demo", False)),
         "company_name": d.company_name,
         "vertical": d.vertical,
         "monthly_volume": float(d.monthly_volume) if d.monthly_volume else None,

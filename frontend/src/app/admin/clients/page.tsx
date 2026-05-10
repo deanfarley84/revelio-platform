@@ -71,7 +71,10 @@ export default function AdminClientsPage() {
                   return (
                     <tr key={c.id}>
                       <td>
-                        <div className="font-medium text-[12.5px]">{c.name}</div>
+                        <div className="font-medium text-[12.5px] flex items-center gap-1.5">
+                          <span>{c.name}</span>
+                          {c.is_demo && <span className="tag tag-amber text-[9.5px]">DEMO</span>}
+                        </div>
                         <div className="text-[10.5px] text-ink/40">{c.website || '—'}</div>
                       </td>
                       <td><span className={`tier-${c.tier}`}>{c.tier?.toUpperCase()}</span></td>
