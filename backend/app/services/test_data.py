@@ -83,23 +83,51 @@ def _acme_ai_output() -> dict[str, Any]:
         "annual_leakage_estimate": {"low": 620000, "mid": 975000, "high": 1320000},
         "revenue_impact_pct": {"low": 1.0, "mid": 1.6, "high": 2.2},
         "primary_drivers": [
-            "Issuer authorisation rate trailing peers, particularly on EU-issued cards.",
-            "Single-acquirer setup with no failover for international volume.",
-            "FX spread on EUR and USD settlement above market by 35-45 bps.",
-            "No retry strategy on soft declines; network tokens not yet enrolled.",
+            {
+                "rank": 1,
+                "driver": "Issuer authorisation rate trailing peers",
+                "estimated_impact_low": 380000,
+                "estimated_impact_high": 560000,
+                "confidence": "medium",
+                "basis": "EU-issued card declines above peer benchmark",
+            },
+            {
+                "rank": 2,
+                "driver": "Single-acquirer footprint on international volume",
+                "estimated_impact_low": 130000,
+                "estimated_impact_high": 240000,
+                "confidence": "medium",
+                "basis": "No failover; cross-border routed via UK only",
+            },
+            {
+                "rank": 3,
+                "driver": "FX spread above market on EUR and USD settlement",
+                "estimated_impact_low": 175000,
+                "estimated_impact_high": 270000,
+                "confidence": "high",
+                "basis": "Observed 35-45 bps over interbank mid",
+            },
+            {
+                "rank": 4,
+                "driver": "No retry strategy on soft declines",
+                "estimated_impact_low": 65000,
+                "estimated_impact_high": 130000,
+                "confidence": "high",
+                "basis": "Network tokens not enrolled, no second-attempt logic",
+            },
         ],
         "financial_breakdown": breakdown,
         "recommended_fix_priorities": {
             "immediate": [
-                "Enrol in network tokens with the existing acquirer.",
-                "Enable second-attempt retry on a curated set of soft-decline reasons.",
+                {"action": "Enrol in network tokens with the existing acquirer.", "estimated_recovery": "£40k-£90k/yr"},
+                {"action": "Enable second-attempt retry on a curated set of soft-decline reasons."},
             ],
-            "mid": [
-                "Add a secondary EU acquirer for cross-border routing, no orchestration needed.",
-                "Renegotiate FX spread on EUR settlement, benchmarked at 25 bps.",
+            "mid_term": [
+                {"action": "Add a secondary EU acquirer for cross-border routing, no orchestration needed."},
+                {"action": "Renegotiate FX spread on EUR settlement, benchmarked at 25 bps."},
             ],
             "structural": [
-                "Reassess routing once a second acquirer is in place; orchestration optional.",
+                {"action": "Reassess routing once a second acquirer is in place; orchestration optional."},
             ],
         },
         "data_gaps": [
@@ -158,23 +186,51 @@ def _globex_ai_output() -> dict[str, Any]:
         "annual_leakage_estimate": {"low": 2100000, "mid": 2910000, "high": 3850000},
         "revenue_impact_pct": {"low": 1.4, "mid": 1.9, "high": 2.5},
         "primary_drivers": [
-            "Single UK acquirer carrying all international volume.",
-            "No orchestration layer; all routing decisions are static.",
-            "Local payment method coverage absent in DACH and Nordics.",
-            "FX spread visible across three settlement currencies.",
+            {
+                "rank": 1,
+                "driver": "Single UK acquirer carrying all international volume",
+                "estimated_impact_low": 950000,
+                "estimated_impact_high": 1500000,
+                "confidence": "high",
+                "basis": "Heavy cross-border volume on UK-only acquiring footprint",
+            },
+            {
+                "rank": 2,
+                "driver": "Routing inefficiency, no failover",
+                "estimated_impact_low": 480000,
+                "estimated_impact_high": 880000,
+                "confidence": "medium",
+                "basis": "Single-PSP dependency; observed monthly outages",
+            },
+            {
+                "rank": 3,
+                "driver": "Local payment method gaps in DACH and Nordics",
+                "estimated_impact_low": 380000,
+                "estimated_impact_high": 700000,
+                "confidence": "medium",
+                "basis": "No iDEAL, Bancontact, Klarna in target markets",
+            },
+            {
+                "rank": 4,
+                "driver": "FX spread on EUR, SEK, CHF settlement",
+                "estimated_impact_low": 240000,
+                "estimated_impact_high": 380000,
+                "confidence": "high",
+                "basis": "Observed mismatch between checkout and settlement currencies",
+            },
         ],
         "financial_breakdown": breakdown,
         "recommended_fix_priorities": {
             "immediate": [
-                "Add a second EU acquirer for cross-border failover.",
-                "Quote local payment method coverage for DACH and Nordics.",
+                {"action": "Add a second EU acquirer for cross-border failover.", "estimated_recovery": "£300k-£600k/yr"},
+                {"action": "Quote local payment method coverage for DACH and Nordics."},
             ],
-            "mid": [
-                "Adopt orchestration for dynamic routing once the second acquirer is live.",
-                "Renegotiate FX spread on settlement currencies, target 30 bps.",
+            "mid_term": [
+                {"action": "Adopt orchestration for dynamic routing once the second acquirer is live."},
+                {"action": "Renegotiate FX spread on settlement currencies, target 30 bps."},
             ],
             "structural": [
-                "Bring chargeback management in-house or onto a dedicated platform.",
+                {"action": "Bring chargeback management in-house or onto a dedicated platform."},
             ],
         },
         "data_gaps": [
