@@ -107,7 +107,17 @@ export default function RoiPage() {
   const [monthlyTransactions, setMonthlyTransactions] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
   const [demoActive, setDemoActive] = useState(false)
-  const [demoBannerDismissed, setDemoBannerDismissed] = useState(false)
+  // Sticky dismissal: hidden once across browser sessions.
+  const [demoBannerDismissed, setDemoBannerDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem('revion_demo_banner_dismissed') === '1'
+  })
+  const dismissDemoBanner = () => {
+    setDemoBannerDismissed(true)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('revion_demo_banner_dismissed', '1')
+    }
+  }
   const [pdfBusy, setPdfBusy] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
   // Cost overlays. null = overlay not added; 0 = added but empty;
@@ -395,7 +405,7 @@ export default function RoiPage() {
             <div className="bg-surface-2 rounded-md px-3 py-2 mb-3 flex items-start justify-between text-[12px] text-ink/70 gap-3">
               <span>Showing example data. The cost to recover is £0, most fixes are configuration changes or conversations with providers. Add costs only if orchestration or advisory apply.</span>
               <button
-                onClick={() => setDemoBannerDismissed(true)}
+                onClick={dismissDemoBanner}
                 className="text-ink/40 hover:text-ink/70 mt-0.5 shrink-0"
                 aria-label="Dismiss example banner"
               >

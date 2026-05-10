@@ -320,7 +320,7 @@ async def generate_roi_pdf(
     current_user: User = Depends(get_current_user),
 ):
     """Render the ROI calculator state as a single-page A4 PDF."""
-    company = (payload.get("companyName") or "Scenario").strip() or "Scenario"
+    company = (payload.get("companyName") or "").strip() or "Untitled scenario"
     timeframe_months = int(payload.get("timeframeMonths") or 12)
     drivers_in = payload.get("drivers") or []
     totals_in = payload.get("totals") or {}
