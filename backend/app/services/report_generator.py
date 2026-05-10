@@ -59,10 +59,16 @@ PDF_TEMPLATE = """
   .cta-pain-list { list-style: none; padding: 0; margin: 0 0 18px 0; }
   .cta-pain-list li { padding: 4px 0 4px 16px; position: relative; font-size: 11.5px; color: #524F48; line-height: 1.55; }
   .cta-pain-list li::before { content: "—"; position: absolute; left: 0; color: #95928A; }
-  .cta-outcome { padding: 10px 14px; border: 1px solid #E8E6E0; border-radius: 6px; margin-bottom: 8px; }
+  .cta-outcome { padding: 10px 14px; border: 1px solid #E8E6E0; border-radius: 6px; margin-bottom: 8px; page-break-inside: avoid; break-inside: avoid; }
   .cta-outcome-label { font-size: 11px; font-weight: 700; color: #1A1830; margin-bottom: 3px; }
   .cta-outcome-body { font-size: 11px; color: #524F48; line-height: 1.55; }
-  .cta-block { background: #1A1830; color: white; border-radius: 8px; padding: 18px 22px; margin-top: 18px; }
+  .cta-outcome-zero { border: 1px solid #1A6B3C; background: #F0F8F2; }
+  .cta-outcome-zero .cta-outcome-label { color: #1A6B3C; }
+  .cta-addon-section { margin-top: 16px; padding-top: 14px; border-top: 1px dashed #E8E6E0; page-break-inside: avoid; break-inside: avoid; }
+  .cta-addon-title { font-size: 10.5px; font-weight: 700; color: #95928A; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+  .cta-addon-item { padding: 8px 12px; background: #F8F7F3; border-radius: 4px; margin-bottom: 6px; font-size: 11px; color: #524F48; line-height: 1.5; page-break-inside: avoid; break-inside: avoid; }
+  .cta-addon-item strong { color: #1A1830; }
+  .cta-block { background: #1A1830; color: white; border-radius: 8px; padding: 18px 22px; margin-top: 18px; page-break-inside: avoid; break-inside: avoid; }
   .cta-headline { font-size: 14px; font-weight: 700; color: white; margin-bottom: 6px; letter-spacing: -0.01em; }
   .cta-body { font-size: 11.5px; color: rgba(255,255,255,0.78); line-height: 1.55; margin-bottom: 12px; }
   .cta-contact-row { font-size: 11px; color: rgba(255,255,255,0.88); margin: 3px 0; }
@@ -195,6 +201,10 @@ PDF_TEMPLATE = """
     </ul>
 
     <h2>What Revelio delivers</h2>
+    <div class="cta-outcome cta-outcome-zero">
+      <div class="cta-outcome-label">Zero cost from Revelio</div>
+      <div class="cta-outcome-body">The diagnostic and strategic engagement carries no fee. We ask only for an NDA and exclusivity during the engagement, and you retain final approval on every recommendation we make.</div>
+    </div>
     <div class="cta-outcome">
       <div class="cta-outcome-label">Provider-agnostic by design</div>
       <div class="cta-outcome-body">No commercial relationship with any PSP, orchestrator, or acquirer. The strategy works for you, not the providers.</div>
@@ -210,6 +220,13 @@ PDF_TEMPLATE = """
     <div class="cta-outcome">
       <div class="cta-outcome-label">Numbers you can take to a board</div>
       <div class="cta-outcome-body">Documented methodology, confidence-rated estimates, defensible under scrutiny.</div>
+    </div>
+
+    <div class="cta-addon-section">
+      <div class="cta-addon-title">Optional add-on services</div>
+      <div class="cta-addon-item"><strong>Pricing drift detection.</strong> Continuous monitoring for unannounced rate changes from your providers, flagged as soon as they hit your statements.</div>
+      <div class="cta-addon-item"><strong>Contract compliance.</strong> Audit your fee statements against signed terms, surface reconciliation gaps and recoverable overcharges.</div>
+      <div class="cta-addon-item"><strong>Enhanced provider pricing review and negotiation.</strong> Independent review of your pricing schedule with hands-on negotiation support, benchmarked against the market.</div>
     </div>
 
     <div class="cta-block">
