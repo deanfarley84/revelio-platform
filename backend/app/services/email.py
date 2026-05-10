@@ -23,7 +23,7 @@ from typing import Iterable, Optional
 
 from app.core.config import settings
 
-logger = logging.getLogger("revion.email")
+logger = logging.getLogger("outturn.email")
 
 
 def is_email_enabled() -> bool:

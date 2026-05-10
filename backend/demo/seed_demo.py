@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Revion Demo Seed Script
+Outturn Demo Seed Script
 Creates realistic demo data for a live demo or client presentation.
 
 Accounts created:
@@ -477,7 +477,7 @@ def seed(db):
 
 
 if __name__ == "__main__":
-    print("\nRevion Demo Seed")
+    print("\nOutturn Demo Seed")
     print("=" * 40)
     try:
         db = conn()

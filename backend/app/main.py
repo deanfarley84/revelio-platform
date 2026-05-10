@@ -47,11 +47,12 @@ async def _init_schema_safely() -> None:
             await conn.execute(text(
                 "ALTER TABLE diagnostics ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT FALSE"
             ))
-            # One-shot brand alignment: rename the original bootstrap org
-            # from "Revelio Operator" to "Revion Operator". Idempotent
+            # Brand alignment: rename the original bootstrap org through
+            # any of its previous names to "Outturn Operator". Idempotent
             # because the WHERE clause stops matching after the first run.
             await conn.execute(text(
-                "UPDATE organisations SET name = 'Revion Operator' WHERE name = 'Revelio Operator'"
+                "UPDATE organisations SET name = 'Outturn Operator' "
+                "WHERE name IN ('Revelio Operator', 'Revion Operator')"
             ))
         logger.info("Column migrations applied")
     except Exception as e:
@@ -69,16 +70,16 @@ async def _init_schema_safely() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Revion API starting in %s mode", settings.ENVIRONMENT)
+    logger.info("Outturn API starting in %s mode", settings.ENVIRONMENT)
     # Fire-and-forget so the health check passes immediately and Render
     # doesn't kill the boot waiting on Postgres.
     asyncio.create_task(_init_schema_safely())
     yield
-    logger.info("Revion API shutting down")
+    logger.info("Outturn API shutting down")
 
 
 app = FastAPI(
-    title="Revion API",
+    title="Outturn API",
     description="Payments Revenue Leakage Diagnostic Platform",
     version="1.0.0",
     lifespan=lifespan,

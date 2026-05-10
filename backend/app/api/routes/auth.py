@@ -112,7 +112,7 @@ async def update_me(
 @limiter.limit("5/minute")
 async def bootstrap(request: Request, payload: dict, db: AsyncSession = Depends(get_db)):
     """
-    Create the first super_admin and an internal Revion organisation.
+    Create the first super_admin and an internal Outturn organisation.
     Refuses if any super_admin already exists. Used once per fresh deploy
     to get a real account into an empty database.
     """
@@ -129,7 +129,7 @@ async def bootstrap(request: Request, payload: dict, db: AsyncSession = Depends(
         raise HTTPException(400, "email, full_name and a password of at least 8 chars are required")
 
     org = Organisation(
-        name=payload.get("org_name") or "Revion Operator",
+        name=payload.get("org_name") or "Outturn Operator",
         tier="enterprise",
         is_active=True,
     )

@@ -43,8 +43,8 @@ class Settings(BaseSettings):
     SMTP_USERNAME: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_USE_TLS: bool = True
-    EMAIL_FROM: str = "no-reply@revion.io"
-    EMAIL_FROM_NAME: str = "Revion"
+    EMAIL_FROM: str = "no-reply@outturn.io"
+    EMAIL_FROM_NAME: str = "Outturn"
     PUBLIC_APP_URL: str = "https://revelio-frontend-38kb.onrender.com"
 
     model_config = SettingsConfigDict(

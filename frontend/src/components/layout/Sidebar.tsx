@@ -50,7 +50,7 @@ export default function Sidebar() {
             </svg>
           </div>
           <div>
-            <div className="text-[13px] font-semibold text-white/90">REVION</div>
+            <div className="text-[13px] font-semibold text-white/90">OUTTURN</div>
             <div className="text-[9.5px] text-white/30 uppercase tracking-widest">Revenue Diagnostics</div>
           </div>
         </div>
