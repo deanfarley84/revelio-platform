@@ -68,7 +68,8 @@ PDF_TEMPLATE = """
   .cta-addon-title { font-size: 10.5px; font-weight: 700; color: #95928A; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
   .cta-addon-item { padding: 8px 12px; background: #F8F7F3; border-radius: 4px; margin-bottom: 6px; font-size: 11px; color: #524F48; line-height: 1.5; page-break-inside: avoid; break-inside: avoid; }
   .cta-addon-item strong { color: #1A1830; }
-  .cta-block { background: #1A1830; color: white; border-radius: 8px; padding: 18px 22px; margin-top: 18px; page-break-inside: avoid; break-inside: avoid; }
+  .cta-positioning { font-size: 11.5px; color: #524F48; line-height: 1.6; font-style: italic; margin-top: 18px; padding: 12px 14px; background: #FAF9F5; border-radius: 6px; border-left: 2px solid #95928A; page-break-inside: avoid; break-inside: avoid; }
+  .cta-block { background: #1A1830; color: white; border-radius: 8px; padding: 18px 22px; margin-top: 14px; page-break-inside: avoid; break-inside: avoid; }
   .cta-headline { font-size: 14px; font-weight: 700; color: white; margin-bottom: 6px; letter-spacing: -0.01em; }
   .cta-body { font-size: 11.5px; color: rgba(255,255,255,0.78); line-height: 1.55; margin-bottom: 12px; }
   .cta-contact-row { font-size: 11px; color: rgba(255,255,255,0.88); margin: 3px 0; }
@@ -202,8 +203,8 @@ PDF_TEMPLATE = """
 
     <h2>What Revelio delivers</h2>
     <div class="cta-outcome cta-outcome-zero">
-      <div class="cta-outcome-label">Zero cost from Revelio</div>
-      <div class="cta-outcome-body">The diagnostic and strategic engagement carries no fee. We ask only for an NDA and exclusivity during the engagement, and you retain final approval on every recommendation we make.</div>
+      <div class="cta-outcome-label">No fee for diagnosis or visibility</div>
+      <div class="cta-outcome-body">The diagnostic and ongoing visibility into your payments stack carry no fee. Revelio only monetises on a small percentage of realised revenue recovery, paid once the strategy is live and the savings are validated. NDA and exclusivity during the engagement; you retain final approval on every recommendation.</div>
     </div>
     <div class="cta-outcome">
       <div class="cta-outcome-label">Provider-agnostic by design</div>
@@ -211,7 +212,7 @@ PDF_TEMPLATE = """
     </div>
     <div class="cta-outcome">
       <div class="cta-outcome-label">Immediate impact, no integration burden</div>
-      <div class="cta-outcome-body">Most of the recoverable revenue is unlocked through configuration changes and contract conversations you already have the rights to make. No build, no multi-month tech project, no in-house roadmap cost.</div>
+      <div class="cta-outcome-body">You do not need to commit internal engineering resources. The providers we recommend connect with no code and are already integrated with hundreds of global acquirers, PSPs, APMs and local payment methods. Your team stays on the roadmap; we handle the payments strategy and partner orchestration.</div>
     </div>
     <div class="cta-outcome">
       <div class="cta-outcome-label">Right tool, right time</div>
@@ -229,9 +230,13 @@ PDF_TEMPLATE = """
       <div class="cta-addon-item"><strong>Enhanced provider pricing review and negotiation.</strong> Independent review of your pricing schedule with hands-on negotiation support, benchmarked against the market.</div>
     </div>
 
+    <div class="cta-positioning">
+      Revelio identifies where commercial leakage exists at no cost. We only monetise when deeper optimisation, execution, or realised recovery is required.
+    </div>
+
     <div class="cta-block">
       <div class="cta-headline">Next step: speak with Revelio</div>
-      <div class="cta-body">A 30-minute conversation with Dean Farley, founder. Independent, provider-agnostic, focused on outcomes you can defend at board level.</div>
+      <div class="cta-body">A 30-minute conversation with Dean Farley, founder. We take away the pain of building a new payments strategy and connect you with the right partners for maximum optimisation. Independent, provider-agnostic, focused on outcomes you can defend at board level.</div>
       <div class="cta-contact-row"><span class="cta-contact-label">Email</span> deanfarley84@gmail.com</div>
       <div class="cta-contact-row"><span class="cta-contact-label">UK</span> +44 (0) 7583 002 267</div>
       <div class="cta-contact-row"><span class="cta-contact-label">Spain</span> +34 711 018 011</div>
