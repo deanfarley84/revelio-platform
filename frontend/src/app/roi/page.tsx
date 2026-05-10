@@ -474,40 +474,36 @@ export default function RoiPage() {
         {/* Cost of inaction framing. Copy adapts to the four overlay
             permutations (pure / orch-only / advisory-only / both).
             Hidden when there is no recoverable revenue to model. */}
-        {totals.grossPeriodRecoverable > 0 && (() => {
-          const orchEst = orchestrationEstimate(monthlyTransactions)
-          return (
-            <div className="card mb-4">
-              <div className="flex items-start gap-3">
-                <TrendingUp size={14} className="text-ink/55 mt-0.5 shrink-0" />
-                <div>
-                  <div className="kpi-label mb-1">Cost of inaction</div>
-                  <div className="text-[13px] text-ink/85 leading-relaxed">
-                    Over the next {timeframeMonths} months, doing nothing leaves <span className="font-medium">{fmtCurrency(totals.grossPeriodRecoverable)}</span> on the table.{' '}
-                    {!totals.hasAnyCost && (
-                      <>Recovering it costs £0, most fixes are configuration changes or conversations with your existing providers.</>
-                    )}
-                    {totals.hasAnyCost && totals.orchAnnual > 0 && totals.oneOffCost === 0 && (
-                      <>Recovering it requires <span className="font-medium">{fmtCurrency(totals.orchAnnual)}/year</span> in orchestration fees, netting <span className="font-medium">{fmtCurrency(totals.periodRecoverable)}</span> over that period.</>
-                    )}
-                    {totals.hasAnyCost && totals.orchAnnual === 0 && totals.oneOffCost > 0 && (
-                      <>One-off advisory of <span className="font-medium">{fmtCurrency(totals.oneOffCost)}</span> recovers <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.oneOffCost)}</span> net.</>
-                    )}
-                    {totals.hasAnyCost && totals.orchAnnual > 0 && totals.oneOffCost > 0 && (
-                      <><span className="font-medium">{fmtCurrency(totals.oneOffCost)}</span> advisory plus <span className="font-medium">{fmtCurrency(totals.orchAnnual)}/year</span> fees recover <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.oneOffCost)}</span> net.</>
-                    )}
-                  </div>
-                  {!totals.hasAnyCost && orchEst && (
-                    <div className="text-[12.5px] text-ink/70 leading-relaxed mt-2 pt-2 border-t border-ink/10">
-                      If you would prefer Revelio to drive the recovery, full orchestration at your transaction volume runs roughly <span className="font-medium">{fmtCurrency(orchEst.annualCost)}/year</span> (£{orchEst.perTx.toFixed(2)}/tx, tiered by volume).{' '}
-                      <span className="text-ink/85">Speak to a Revelio Strategic AE: provider-agnostic, with engagements averaging <span className="font-medium">10x ROI</span>.</span>
-                    </div>
+        {totals.grossPeriodRecoverable > 0 && (
+          <div className="card mb-4">
+            <div className="flex items-start gap-3">
+              <TrendingUp size={14} className="text-ink/55 mt-0.5 shrink-0" />
+              <div>
+                <div className="kpi-label mb-1">Cost of inaction</div>
+                <div className="text-[13px] text-ink/85 leading-relaxed">
+                  Over the next {timeframeMonths} months, doing nothing leaves <span className="font-medium">{fmtCurrency(totals.grossPeriodRecoverable)}</span> on the table.{' '}
+                  {!totals.hasAnyCost && (
+                    <>Resolvable by adding a layer with the right payment strategy, shifting the power dynamic back into your control, not the legacy providers.</>
+                  )}
+                  {totals.hasAnyCost && totals.orchAnnual > 0 && totals.oneOffCost === 0 && (
+                    <>Recovering it requires <span className="font-medium">{fmtCurrency(totals.orchAnnual)}/year</span> in orchestration fees, netting <span className="font-medium">{fmtCurrency(totals.periodRecoverable)}</span> over that period.</>
+                  )}
+                  {totals.hasAnyCost && totals.orchAnnual === 0 && totals.oneOffCost > 0 && (
+                    <>One-off advisory of <span className="font-medium">{fmtCurrency(totals.oneOffCost)}</span> recovers <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.oneOffCost)}</span> net.</>
+                  )}
+                  {totals.hasAnyCost && totals.orchAnnual > 0 && totals.oneOffCost > 0 && (
+                    <><span className="font-medium">{fmtCurrency(totals.oneOffCost)}</span> advisory plus <span className="font-medium">{fmtCurrency(totals.orchAnnual)}/year</span> fees recover <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.oneOffCost)}</span> net.</>
                   )}
                 </div>
+                {!totals.hasAnyCost && (
+                  <div className="text-[12.5px] text-ink/70 leading-relaxed mt-2 pt-2 border-t border-ink/10">
+                    Speak to a Revelio Strategic AE who is provider-agnostic, with the integrity and expertise to map your leakage end to end, build a strategy that works for you and not the providers, and connect you with the right partner of choice.
+                  </div>
+                )}
               </div>
             </div>
-          )
-        })()}
+          </div>
+        )}
 
         {/* Summary bar (KPIs). Pure-recovery frame when no costs are active;
             classic implementation/ROI/payback frame once an overlay introduces a cost. */}
