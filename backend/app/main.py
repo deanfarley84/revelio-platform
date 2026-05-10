@@ -15,10 +15,15 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 
 async def _init_schema_safely() -> None:
     """
-    Best-effort table creation + default seed. Runs in a background task so
-    /health responds fast on cold start. If the DB is unreachable we log and
-    continue - the next request hitting a DB-backed route will surface the
-    real error.
+    Best-effort table creation + lightweight column migrations + default
+    seed. Runs in a background task so /health responds fast on cold start.
+    If the DB is unreachable we log and continue - the next request hitting
+    a DB-backed route will surface the real error.
+
+    Column migrations: Base.metadata.create_all only creates missing tables,
+    it does not alter existing ones. For new columns added after the first
+    deploy we run idempotent ADD COLUMN IF NOT EXISTS statements here. This
+    is the pragmatic stand-in for Alembic until migrations are wired.
     """
     try:
         from app.models import user  # noqa: F401  register models on Base
@@ -28,6 +33,19 @@ async def _init_schema_safely() -> None:
     except Exception as e:
         logger.warning("Schema init failed (will retry on first DB request): %s", e)
         return
+
+    try:
+        from sqlalchemy import text
+        async with engine.begin() as conn:
+            await conn.execute(text(
+                "ALTER TABLE organisations ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT FALSE"
+            ))
+            await conn.execute(text(
+                "ALTER TABLE diagnostics ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT FALSE"
+            ))
+        logger.info("Column migrations applied")
+    except Exception as e:
+        logger.warning("Column migration failed (non-fatal): %s", e)
 
     try:
         from app.services.seed_defaults import seed_all
