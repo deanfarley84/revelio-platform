@@ -51,6 +51,27 @@ _ROI_PDF_TEMPLATE = """
   .right { text-align: right; }
   .mono { font-family: monospace; }
   .footer { margin-top: 14px; font-size: 9.5px; color: #95928A; line-height: 1.5; border-top: 1px solid #E8E6E0; padding-top: 9px; }
+  .cta-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid #E8E6E0; }
+  .cta-pain-narrative { background: #F5F4F1; border-left: 3px solid #1A1830; border-radius: 0 6px 6px 0; padding: 12px 14px; font-size: 11.5px; color: #524F48; line-height: 1.6; margin-bottom: 12px; }
+  .cta-subheader { font-size: 11px; color: #524F48; margin-bottom: 5px; }
+  .cta-pain-list { list-style: none; padding: 0; margin: 0 0 14px 0; }
+  .cta-pain-list li { padding: 3px 0 3px 14px; position: relative; font-size: 11px; color: #524F48; line-height: 1.5; }
+  .cta-pain-list li::before { content: "—"; position: absolute; left: 0; color: #95928A; }
+  .cta-outcome { padding: 9px 12px; border: 1px solid #E8E6E0; border-radius: 6px; margin-bottom: 6px; page-break-inside: avoid; break-inside: avoid; }
+  .cta-outcome-label { font-size: 10.5px; font-weight: 700; color: #1A1830; margin-bottom: 2px; }
+  .cta-outcome-body { font-size: 10.5px; color: #524F48; line-height: 1.5; }
+  .cta-outcome-zero { border: 1px solid #1A6B3C; background: #F0F8F2; }
+  .cta-outcome-zero .cta-outcome-label { color: #1A6B3C; }
+  .cta-addon-section { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #E8E6E0; page-break-inside: avoid; break-inside: avoid; }
+  .cta-addon-title { font-size: 9.5px; font-weight: 700; color: #95928A; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+  .cta-addon-item { padding: 6px 10px; background: #F8F7F3; border-radius: 4px; margin-bottom: 5px; font-size: 10.5px; color: #524F48; line-height: 1.5; page-break-inside: avoid; break-inside: avoid; }
+  .cta-addon-item strong { color: #1A1830; }
+  .cta-positioning { font-size: 11px; color: #524F48; line-height: 1.6; font-style: italic; margin-top: 14px; padding: 10px 12px; background: #FAF9F5; border-radius: 6px; border-left: 2px solid #95928A; page-break-inside: avoid; break-inside: avoid; }
+  .cta-block { background: #1A1830; color: white; border-radius: 8px; padding: 16px 18px; margin-top: 12px; page-break-inside: avoid; break-inside: avoid; }
+  .cta-headline { font-size: 13px; font-weight: 700; color: white; margin-bottom: 5px; letter-spacing: -0.01em; }
+  .cta-body { font-size: 11px; color: rgba(255,255,255,0.78); line-height: 1.55; margin-bottom: 10px; }
+  .cta-contact-row { font-size: 10.5px; color: rgba(255,255,255,0.88); margin: 2px 0; }
+  .cta-contact-label { color: rgba(255,255,255,0.5); display: inline-block; width: 60px; }
 </style>
 </head>
 <body>
@@ -73,7 +94,7 @@ _ROI_PDF_TEMPLATE = """
     <div class="inaction-label">Cost of inaction</div>
     Over the next {{ timeframe_months }} months, doing nothing leaves <strong>{{ fmt(totals.gross_period_recoverable) }}</strong> on the table.
     {% if cost_state == "pure_recovery" %}
-      Recovering it costs £0, most fixes are configuration changes or conversations with your existing providers.
+      Resolvable by adding a layer with the right payment strategy, shifting the power dynamic back into your control, not the legacy providers.
     {% elif cost_state == "orchestration_only" %}
       Recovering it requires <strong>{{ fmt(totals.orch_annual) }}/year</strong> in orchestration fees, netting <strong>{{ fmt(totals.period_recoverable) }}</strong> over that period.
     {% elif cost_state == "advisory_only" %}
@@ -185,6 +206,63 @@ _ROI_PDF_TEMPLATE = """
     </tbody>
   </table>
   {% endif %}
+
+  <div class="cta-section">
+    <h2>The path forward</h2>
+    <div class="cta-pain-narrative">
+      You have seen where revenue is leaking. The harder question is what to do about it without committing your engineering roadmap to a six-month build, or putting trust in a provider whose commercial incentives may not fully align with yours.
+    </div>
+    <div class="cta-subheader">You are likely sitting with a familiar set of frustrations:</div>
+    <ul class="cta-pain-list">
+      <li>Multiple PSPs, each pulling in a slightly different direction.</li>
+      <li>An authorisation rate you cannot quite explain, let alone improve.</li>
+      <li>A board or CFO asking pointed questions, with no defensible answer.</li>
+      <li>A tech team whose backlog is already full.</li>
+      <li>A creeping sense that the stack has not had an honest, independent review in years.</li>
+    </ul>
+
+    <h2>What Revelio delivers</h2>
+    <div class="cta-outcome cta-outcome-zero">
+      <div class="cta-outcome-label">No fee for diagnosis or visibility</div>
+      <div class="cta-outcome-body">The diagnostic and ongoing visibility into your payments stack carry no fee. Revelio only monetises on a small percentage of realised revenue recovery, paid once the strategy is live and the savings are validated. NDA and exclusivity during the engagement; you retain final approval on every recommendation.</div>
+    </div>
+    <div class="cta-outcome">
+      <div class="cta-outcome-label">Provider-agnostic by design</div>
+      <div class="cta-outcome-body">No commercial relationship with any PSP, orchestrator, or acquirer. The strategy works for you, not the providers.</div>
+    </div>
+    <div class="cta-outcome">
+      <div class="cta-outcome-label">Immediate impact, no integration burden</div>
+      <div class="cta-outcome-body">You do not need to commit internal engineering resources. The providers we recommend connect with no code and are already integrated with hundreds of global acquirers, PSPs, APMs and local payment methods. Your team stays on the roadmap; we handle the payments strategy and partner orchestration.</div>
+    </div>
+    <div class="cta-outcome">
+      <div class="cta-outcome-label">Right tool, right time</div>
+      <div class="cta-outcome-body">When new infrastructure is genuinely the answer, we connect you with the partner that fits your specific shape, not whoever pays the highest referral fee.</div>
+    </div>
+    <div class="cta-outcome">
+      <div class="cta-outcome-label">Numbers you can take to a board</div>
+      <div class="cta-outcome-body">Documented methodology, confidence-rated estimates, defensible under scrutiny.</div>
+    </div>
+
+    <div class="cta-addon-section">
+      <div class="cta-addon-title">Optional add-on services</div>
+      <div class="cta-addon-item"><strong>Pricing drift detection.</strong> Continuous monitoring for unannounced rate changes from your providers, flagged as soon as they hit your statements.</div>
+      <div class="cta-addon-item"><strong>Contract compliance.</strong> Audit your fee statements against signed terms, surface reconciliation gaps and recoverable overcharges.</div>
+      <div class="cta-addon-item"><strong>Enhanced provider pricing review and negotiation.</strong> Independent review of your pricing schedule with hands-on negotiation support, benchmarked against the market.</div>
+    </div>
+
+    <div class="cta-positioning">
+      Revelio identifies where commercial leakage exists at no cost. We only monetise when deeper optimisation, execution, or realised recovery is required.
+    </div>
+
+    <div class="cta-block">
+      <div class="cta-headline">Next step: speak with Revelio</div>
+      <div class="cta-body">A 30-minute conversation with Dean Farley, founder. We take away the pain of building a new payments strategy and connect you with the right partners for maximum optimisation. Independent, provider-agnostic, focused on outcomes you can defend at board level.</div>
+      <div class="cta-contact-row"><span class="cta-contact-label">Email</span> deanfarley84@gmail.com</div>
+      <div class="cta-contact-row"><span class="cta-contact-label">UK</span> +44 (0) 7583 002 267</div>
+      <div class="cta-contact-row"><span class="cta-contact-label">Spain</span> +34 711 018 011</div>
+      <div class="cta-contact-row"><span class="cta-contact-label">LinkedIn</span> linkedin.com/in/df2024</div>
+    </div>
+  </div>
 
   <div class="footer">
     <strong style="color:#0D0C0A;">Method:</strong>
