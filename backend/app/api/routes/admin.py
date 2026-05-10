@@ -5,7 +5,7 @@ from sqlalchemy import select, func, desc
 from typing import Optional
 
 from app.core.database import get_db
-from app.core.auth import require_admin, require_operator, require_super_admin
+from app.core.auth import require_admin, require_operator, require_super_admin, hash_password
 from app.models.user import (
     Diagnostic, Organisation, User, ClientIntel, ClientIntelLog,
     Job, AuditLog, Notification
@@ -13,6 +13,68 @@ from app.models.user import (
 from app.services.test_data import seed_test_data, wipe_test_data
 
 router = APIRouter()
+
+
+@router.post("/orgs", status_code=201)
+async def create_client_org(
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """Create a real (non-demo) client organisation and seed admin user.
+    Admin-only equivalent of /auth/register-org so we can stop relying on
+    the unauthenticated public endpoint for operator-led onboarding."""
+    org_name = (payload.get("org_name") or "").strip()
+    admin_email = (payload.get("email") or "").strip().lower()
+    admin_password = payload.get("password") or ""
+    admin_full_name = (payload.get("full_name") or "").strip()
+    if not org_name or not admin_email or not admin_full_name:
+        raise HTTPException(400, "org_name, email and full_name are required")
+    if len(admin_password) < 8:
+        raise HTTPException(400, "password must be at least 8 characters")
+
+    existing = await db.execute(select(User).where(User.email == admin_email))
+    if existing.scalar_one_or_none():
+        raise HTTPException(409, "A user with that email already exists")
+
+    org = Organisation(
+        name=org_name,
+        website=payload.get("website"),
+        vertical=payload.get("vertical"),
+        tier=payload.get("tier", "lite"),
+        is_active=True,
+        is_demo=False,
+    )
+    db.add(org)
+    await db.flush()
+
+    user = User(
+        org_id=org.id,
+        email=admin_email,
+        full_name=admin_full_name,
+        role="client_admin",
+        password_hash=hash_password(admin_password),
+        is_active=True,
+    )
+    db.add(user)
+    await db.commit()
+
+    return {
+        "org": {
+            "id": str(org.id),
+            "name": org.name,
+            "tier": org.tier,
+            "website": org.website,
+            "vertical": org.vertical,
+            "is_demo": False,
+        },
+        "admin_user": {
+            "id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role,
+        },
+    }
 
 
 @router.post("/seed-test-data")

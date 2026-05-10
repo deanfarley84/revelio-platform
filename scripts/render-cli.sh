@@ -7,7 +7,7 @@
 # Commands:
 #   services                     List all services with id, name, type, status
 #   service <name|id>            Get service detail
-#   env <name|id>                Show env vars for a service
+#   env <name|id> [--reveal]     Show env vars (secrets redacted by default; --reveal prints in full)
 #   set-env <name|id> KEY VALUE  Set/update one env var (preserves others)
 #   deploys <name|id>            List recent deploys for a service
 #   deploy <name|id> <deploy_id> Get one deploy detail
@@ -106,9 +106,27 @@ cmd_service() {
 }
 
 cmd_env() {
-  local id; id=$(resolve_id "$1")
-  curl -sS "${AUTH[@]}" "$BASE/services/$id/env-vars" \
-    | jq -r '.[] | "\(.envVar.key)=\(.envVar.value // "(empty)")"'
+  # Redacts known-sensitive values by default. Pass --reveal as the second
+  # argument to print full values, e.g. ./scripts/render-cli.sh env svc --reveal.
+  local id; id=$(resolve_id "$1"); shift
+  local reveal="false"
+  if [ "${1:-}" = "--reveal" ]; then reveal="true"; fi
+  if [ "$reveal" = "true" ]; then
+    curl -sS "${AUTH[@]}" "$BASE/services/$id/env-vars" \
+      | jq -r '.[] | "\(.envVar.key)=\(.envVar.value // "(empty)")"'
+  else
+    curl -sS "${AUTH[@]}" "$BASE/services/$id/env-vars" | jq -r '
+      .[] | .envVar |
+      if (.key | test("KEY|SECRET|TOKEN|PASSWORD|DATABASE_URL"; "i")) then
+        "\(.key)=" + (
+          if (.value // "" | length) == 0 then "(empty)"
+          else (.value | .[0:4] + "***redacted***") end
+        )
+      else
+        "\(.key)=\(.value // "(empty)")"
+      end
+    '
+  fi
 }
 
 cmd_set_env() {

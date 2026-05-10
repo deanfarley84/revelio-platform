@@ -13,7 +13,11 @@ router = APIRouter()
 
 @router.post("/login")
 async def login(payload: dict, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == payload.get("email")))
+    # Normalise email so browser autofill that capitalises the first letter
+    # does not 401 a legitimate user. Bootstrap and register-org both
+    # lowercase on write so this is purely defensive on the read side.
+    email = (payload.get("email") or "").strip().lower()
+    result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
     if not user or not verify_password(payload.get("password", ""), user.password_hash):
         raise HTTPException(401, "Invalid credentials")
@@ -94,8 +98,10 @@ async def bootstrap(payload: dict, db: AsyncSession = Depends(get_db)):
 @router.post("/register-org")
 async def register_org(payload: dict, db: AsyncSession = Depends(get_db)):
     """Register a new organisation and admin user."""
-    # Check email unique
-    result = await db.execute(select(User).where(User.email == payload.get("email")))
+    email = (payload.get("email") or "").strip().lower()
+    if not email:
+        raise HTTPException(400, "Email is required")
+    result = await db.execute(select(User).where(User.email == email))
     if result.scalar_one_or_none():
         raise HTTPException(400, "Email already registered")
 
@@ -110,7 +116,7 @@ async def register_org(payload: dict, db: AsyncSession = Depends(get_db)):
 
     user = User(
         org_id=org.id,
-        email=payload.get("email"),
+        email=email,
         full_name=payload.get("full_name", ""),
         role="client_admin",
         password_hash=hash_password(payload.get("password", "")),

@@ -43,6 +43,12 @@ async def _init_schema_safely() -> None:
             await conn.execute(text(
                 "ALTER TABLE diagnostics ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT FALSE"
             ))
+            # One-shot brand alignment: rename the original bootstrap org
+            # from "Revelio Operator" to "Revion Operator". Idempotent
+            # because the WHERE clause stops matching after the first run.
+            await conn.execute(text(
+                "UPDATE organisations SET name = 'Revion Operator' WHERE name = 'Revelio Operator'"
+            ))
         logger.info("Column migrations applied")
     except Exception as e:
         logger.warning("Column migration failed (non-fatal): %s", e)
