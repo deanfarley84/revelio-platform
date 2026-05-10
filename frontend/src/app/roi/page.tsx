@@ -113,6 +113,14 @@ export default function RoiPage() {
       .catch(() => setLoading(false))
   }, [])
 
+  // Auto-select the most recent released diagnostic so the ROI page
+  // lands on real data straight away rather than a "Select a diagnostic"
+  // dropdown with zero KPIs underneath.
+  useEffect(() => {
+    if (loading || mode !== 'diagnostic' || selectedId || diagnostics.length === 0) return
+    setSelectedId(diagnostics[0].id)
+  }, [loading, mode, selectedId, diagnostics])
+
   // Demo mode: enter once when the dashboard has no released diagnostics
   // so the calculator never lands empty for first-time visitors.
   useEffect(() => {
