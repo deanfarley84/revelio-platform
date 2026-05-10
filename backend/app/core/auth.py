@@ -60,6 +60,7 @@ def require_roles(*roles):
     return checker
 
 
+require_super_admin = require_roles("super_admin")
 require_admin = require_roles("super_admin", "operator_admin")
 require_operator = require_roles("super_admin", "operator_admin", "analyst")
 require_client = require_roles("super_admin", "operator_admin", "analyst", "client_admin", "client_viewer")

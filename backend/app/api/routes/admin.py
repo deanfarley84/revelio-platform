@@ -5,13 +5,39 @@ from sqlalchemy import select, func, desc
 from typing import Optional
 
 from app.core.database import get_db
-from app.core.auth import require_admin, require_operator
+from app.core.auth import require_admin, require_operator, require_super_admin
 from app.models.user import (
     Diagnostic, Organisation, User, ClientIntel, ClientIntelLog,
     Job, AuditLog, Notification
 )
+from app.services.test_data import seed_test_data, wipe_test_data
 
 router = APIRouter()
+
+
+@router.post("/seed-test-data")
+async def seed_test_data_endpoint(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_super_admin),
+):
+    """Seed three demo merchant orgs end to end. Super_admin only.
+    Refuses if any real (non-demo) client organisation already exists."""
+    result = await seed_test_data(db, super_admin_id=str(current_user.id))
+    if result.get("error") == "real_client_orgs_present":
+        raise HTTPException(
+            status_code=409,
+            detail=result.get("message", "Real client orgs present; refusing to seed."),
+        )
+    return result
+
+
+@router.delete("/seed-test-data")
+async def wipe_test_data_endpoint(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_super_admin),
+):
+    """Remove every is_demo=True org and dependents. Super_admin only."""
+    return await wipe_test_data(db)
 
 
 @router.get("/overview")
