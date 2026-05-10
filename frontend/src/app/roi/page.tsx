@@ -183,10 +183,13 @@ export default function RoiPage() {
       setDrivers(DEFAULT_DRIVERS)
       return
     }
+    // Production AI output uses estimated_loss_mid (and _low / _high)
+    // per the prompt schema; older / hand-crafted fixtures sometimes
+    // carry a singular estimated_loss. Accept either.
     const next: Driver[] = breakdown.map((b: any, i: number) => ({
       id: `b${i}`,
       category: b.category || `Driver ${i + 1}`,
-      estimatedLoss: Number(b.estimated_loss) || 0,
+      estimatedLoss: Number(b.estimated_loss ?? b.estimated_loss_mid ?? 0) || 0,
       recoveryRate: Math.min(defaultRecoveryRate(b.category), ceilingFor(b.category)),
       implementationCost: 0,
       confidence: b.confidence,
