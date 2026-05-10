@@ -3,7 +3,7 @@ import './globals.css'
 import { AuthProvider } from '@/lib/auth-context'
 
 export const metadata: Metadata = {
-  title: 'Revelio — Payments Revenue Leakage Diagnostic',
+  title: 'Revion — Payments Revenue Leakage Diagnostic',
   description: 'Identify and quantify hidden revenue loss in your payment infrastructure.',
 }
 

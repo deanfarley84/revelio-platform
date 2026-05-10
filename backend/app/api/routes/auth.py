@@ -49,7 +49,7 @@ async def me(current_user: User = Depends(get_current_user)):
 @router.post("/bootstrap")
 async def bootstrap(payload: dict, db: AsyncSession = Depends(get_db)):
     """
-    Create the first super_admin and an internal Revelio organisation.
+    Create the first super_admin and an internal Revion organisation.
     Refuses if any super_admin already exists. Used once per fresh deploy
     to get a real account into an empty database.
     """
@@ -66,7 +66,7 @@ async def bootstrap(payload: dict, db: AsyncSession = Depends(get_db)):
         raise HTTPException(400, "email, full_name and a password of at least 8 chars are required")
 
     org = Organisation(
-        name=payload.get("org_name") or "Revelio Operator",
+        name=payload.get("org_name") or "Revion Operator",
         tier="enterprise",
         is_active=True,
     )

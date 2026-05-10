@@ -59,16 +59,16 @@ async def _init_schema_safely() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Revelio API starting in %s mode", settings.ENVIRONMENT)
+    logger.info("Revion API starting in %s mode", settings.ENVIRONMENT)
     # Fire-and-forget so the health check passes immediately and Render
     # doesn't kill the boot waiting on Postgres.
     asyncio.create_task(_init_schema_safely())
     yield
-    logger.info("Revelio API shutting down")
+    logger.info("Revion API shutting down")
 
 
 app = FastAPI(
-    title="Revelio API",
+    title="Revion API",
     description="Payments Revenue Leakage Diagnostic Platform",
     version="1.0.0",
     lifespan=lifespan,
