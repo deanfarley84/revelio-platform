@@ -313,6 +313,7 @@ def _serialise_diagnostic(d: Diagnostic, user: User) -> dict:
         "company_name": d.company_name,
         "vertical": d.vertical,
         "monthly_volume": float(d.monthly_volume) if d.monthly_volume else None,
+        "monthly_transactions": int(d.monthly_transactions) if d.monthly_transactions else None,
         "auth_rate": float(d.auth_rate) if d.auth_rate else None,
         "chargeback_rate": float(d.chargeback_rate) if d.chargeback_rate else None,
         "submitted_at": d.submitted_at.isoformat() if d.submitted_at else None,

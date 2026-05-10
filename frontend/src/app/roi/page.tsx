@@ -80,6 +80,22 @@ function ceilingFor(category: string): number {
   return 95
 }
 
+// Per-transaction orchestration fee tiers used to size the recurring
+// cost when a merchant does not currently run orchestration. Tiers are
+// volume-banded so smaller merchants see a higher per-tx rate (less
+// negotiating leverage) and high-volume merchants see the wholesale
+// rate. Tune in one place.
+function orchestrationEstimate(monthlyTransactions: number | null | undefined) {
+  if (!monthlyTransactions || monthlyTransactions <= 0) return null
+  const perTx = monthlyTransactions < 100000
+    ? 0.08
+    : monthlyTransactions < 1000000
+      ? 0.05
+      : 0.02
+  const annualCost = monthlyTransactions * 12 * perTx
+  return { perTx, annualCost }
+}
+
 export default function RoiPage() {
   const [mode, setMode] = useState<Mode>('diagnostic')
   const [diagnostics, setDiagnostics] = useState<any[]>([])
@@ -88,6 +104,7 @@ export default function RoiPage() {
   const [drivers, setDrivers] = useState<Driver[]>(DEFAULT_DRIVERS)
   const [timeframeMonths, setTimeframeMonths] = useState<number>(12)
   const [companyName, setCompanyName] = useState<string>('')
+  const [monthlyTransactions, setMonthlyTransactions] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
   const [demoActive, setDemoActive] = useState(false)
   const [demoBannerDismissed, setDemoBannerDismissed] = useState(false)
@@ -129,6 +146,7 @@ export default function RoiPage() {
       setDrivers(DEMO_DRIVERS)
       setCompanyName(DEMO_COMPANY)
       setTimeframeMonths(12)
+      setMonthlyTransactions(120000)  // mid-market UK retailer baseline
       setDemoActive(true)
     }
   }, [loading, mode, diagnostics, selectedId, demoActive])
@@ -145,6 +163,7 @@ export default function RoiPage() {
     if (mode === 'manual') {
       setDrivers(DEFAULT_DRIVERS)
       setCompanyName('')
+      setMonthlyTransactions(null)
       setDemoActive(false)
       setOrchestrationCost(null)
       setOrchestrationNotes('')
@@ -157,7 +176,8 @@ export default function RoiPage() {
     if (mode !== 'diagnostic' || !selectedId) return
     const d = diagnostics.find(x => x.id === selectedId)
     if (!d) return
-    setCompanyName(d.organisation?.name || d.reference || '')
+    setCompanyName(d.organisation?.name || d.company_name || d.reference || '')
+    setMonthlyTransactions(d.monthly_transactions ?? null)
     const breakdown = d.output?.financial_breakdown || []
     if (breakdown.length === 0) {
       setDrivers(DEFAULT_DRIVERS)
@@ -257,6 +277,7 @@ export default function RoiPage() {
     setDrivers(DEMO_DRIVERS)
     setCompanyName(DEMO_COMPANY)
     setTimeframeMonths(12)
+    setMonthlyTransactions(120000)
     setOrchestrationCost(null)
     setOrchestrationNotes('')
     setAdvisoryFee(null)
@@ -453,31 +474,40 @@ export default function RoiPage() {
         {/* Cost of inaction framing. Copy adapts to the four overlay
             permutations (pure / orch-only / advisory-only / both).
             Hidden when there is no recoverable revenue to model. */}
-        {totals.grossPeriodRecoverable > 0 && (
-          <div className="card mb-4">
-            <div className="flex items-start gap-3">
-              <TrendingUp size={14} className="text-ink/55 mt-0.5 shrink-0" />
-              <div>
-                <div className="kpi-label mb-1">Cost of inaction</div>
-                <div className="text-[13px] text-ink/85 leading-relaxed">
-                  Over the next {timeframeMonths} months, doing nothing leaves <span className="font-medium">{fmtCurrency(totals.grossPeriodRecoverable)}</span> on the table.{' '}
-                  {!totals.hasAnyCost && (
-                    <>Recovering it costs £0, most fixes are configuration changes or conversations with your existing providers.</>
-                  )}
-                  {totals.hasAnyCost && totals.orchAnnual > 0 && totals.oneOffCost === 0 && (
-                    <>Recovering it requires <span className="font-medium">{fmtCurrency(totals.orchAnnual)}/year</span> in orchestration fees, netting <span className="font-medium">{fmtCurrency(totals.periodRecoverable)}</span> over that period.</>
-                  )}
-                  {totals.hasAnyCost && totals.orchAnnual === 0 && totals.oneOffCost > 0 && (
-                    <>One-off advisory of <span className="font-medium">{fmtCurrency(totals.oneOffCost)}</span> recovers <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.oneOffCost)}</span> net.</>
-                  )}
-                  {totals.hasAnyCost && totals.orchAnnual > 0 && totals.oneOffCost > 0 && (
-                    <><span className="font-medium">{fmtCurrency(totals.oneOffCost)}</span> advisory plus <span className="font-medium">{fmtCurrency(totals.orchAnnual)}/year</span> fees recover <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.oneOffCost)}</span> net.</>
+        {totals.grossPeriodRecoverable > 0 && (() => {
+          const orchEst = orchestrationEstimate(monthlyTransactions)
+          return (
+            <div className="card mb-4">
+              <div className="flex items-start gap-3">
+                <TrendingUp size={14} className="text-ink/55 mt-0.5 shrink-0" />
+                <div>
+                  <div className="kpi-label mb-1">Cost of inaction</div>
+                  <div className="text-[13px] text-ink/85 leading-relaxed">
+                    Over the next {timeframeMonths} months, doing nothing leaves <span className="font-medium">{fmtCurrency(totals.grossPeriodRecoverable)}</span> on the table.{' '}
+                    {!totals.hasAnyCost && (
+                      <>Recovering it costs £0, most fixes are configuration changes or conversations with your existing providers.</>
+                    )}
+                    {totals.hasAnyCost && totals.orchAnnual > 0 && totals.oneOffCost === 0 && (
+                      <>Recovering it requires <span className="font-medium">{fmtCurrency(totals.orchAnnual)}/year</span> in orchestration fees, netting <span className="font-medium">{fmtCurrency(totals.periodRecoverable)}</span> over that period.</>
+                    )}
+                    {totals.hasAnyCost && totals.orchAnnual === 0 && totals.oneOffCost > 0 && (
+                      <>One-off advisory of <span className="font-medium">{fmtCurrency(totals.oneOffCost)}</span> recovers <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.oneOffCost)}</span> net.</>
+                    )}
+                    {totals.hasAnyCost && totals.orchAnnual > 0 && totals.oneOffCost > 0 && (
+                      <><span className="font-medium">{fmtCurrency(totals.oneOffCost)}</span> advisory plus <span className="font-medium">{fmtCurrency(totals.orchAnnual)}/year</span> fees recover <span className="font-medium">{fmtCurrency(totals.periodRecoverable - totals.oneOffCost)}</span> net.</>
+                    )}
+                  </div>
+                  {!totals.hasAnyCost && orchEst && (
+                    <div className="text-[12.5px] text-ink/70 leading-relaxed mt-2 pt-2 border-t border-ink/10">
+                      If you would prefer Revelio to drive the recovery, full orchestration at your transaction volume runs roughly <span className="font-medium">{fmtCurrency(orchEst.annualCost)}/year</span> (£{orchEst.perTx.toFixed(2)}/tx, tiered by volume).{' '}
+                      <span className="text-ink/85">Speak to a Revelio Strategic AE: provider-agnostic, with engagements averaging <span className="font-medium">10x ROI</span>.</span>
+                    </div>
                   )}
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Summary bar (KPIs). Pure-recovery frame when no costs are active;
             classic implementation/ROI/payback frame once an overlay introduces a cost. */}
