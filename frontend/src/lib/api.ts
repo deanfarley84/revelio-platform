@@ -34,9 +34,22 @@ export const authApi = {
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }),
   me: () => api.get('/auth/me'),
+  updateMe: (payload: { full_name?: string; email?: string; current_password?: string; new_password?: string }) =>
+    api.patch('/auth/me', payload),
   register: (payload: any) => api.post('/auth/register-org', payload),
   bootstrap: (payload: { email: string; password: string; full_name: string; org_name?: string }) =>
     api.post('/auth/bootstrap', payload),
+}
+
+// ── Invitations ───────────────────────────────────────────
+export const invitationsApi = {
+  list: () => api.get('/invitations'),
+  create: (payload: { email: string; role?: string; org_id?: string }) =>
+    api.post('/invitations', payload),
+  preview: (token: string) => api.get(`/invitations/${token}/preview`),
+  accept: (token: string, payload: { full_name: string; password: string }) =>
+    api.post(`/invitations/${token}/accept`, payload),
+  revoke: (id: string) => api.delete(`/invitations/${id}`),
 }
 
 // ── Diagnostics ───────────────────────────────────────────

@@ -17,6 +17,7 @@ const clientNav: NavItem[] = [
   { href: '/results', label: 'My results', icon: <BarChart2 size={13} /> },
   { href: '/roi', label: 'ROI calculator', icon: <Calculator size={13} /> },
   { href: '/reports', label: 'Reports', icon: <FileText size={13} /> },
+  { href: '/settings', label: 'Settings', icon: <Settings size={13} /> },
 ]
 
 const adminNav: NavItem[] = [

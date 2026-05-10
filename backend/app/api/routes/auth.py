@@ -52,6 +52,62 @@ async def me(current_user: User = Depends(get_current_user)):
     }
 
 
+@router.patch("/me")
+async def update_me(
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update the caller's profile: full_name, email, password.
+    Email change requires the new value to be unused. Password change
+    requires the current password to be supplied for verification."""
+    changed: list[str] = []
+
+    if "full_name" in payload:
+        full_name = (payload.get("full_name") or "").strip()
+        if not full_name:
+            raise HTTPException(400, "full_name cannot be empty")
+        if full_name != current_user.full_name:
+            current_user.full_name = full_name
+            changed.append("full_name")
+
+    if "email" in payload:
+        new_email = (payload.get("email") or "").strip().lower()
+        if not new_email:
+            raise HTTPException(400, "email cannot be empty")
+        if new_email != current_user.email:
+            dup = await db.execute(select(User).where(User.email == new_email))
+            if dup.scalar_one_or_none():
+                raise HTTPException(409, "Email already in use")
+            current_user.email = new_email
+            changed.append("email")
+
+    if "new_password" in payload:
+        new_password = payload.get("new_password") or ""
+        current_password = payload.get("current_password") or ""
+        if not current_password or not verify_password(current_password, current_user.password_hash):
+            raise HTTPException(403, "Current password is incorrect")
+        if len(new_password) < 8:
+            raise HTTPException(400, "New password must be at least 8 characters")
+        current_user.password_hash = hash_password(new_password)
+        changed.append("password")
+
+    if changed:
+        await db.commit()
+        await db.refresh(current_user)
+
+    return {
+        "changed": changed,
+        "user": {
+            "id": str(current_user.id),
+            "email": current_user.email,
+            "full_name": current_user.full_name,
+            "role": current_user.role,
+            "org_id": str(current_user.org_id) if current_user.org_id else None,
+        },
+    }
+
+
 @router.post("/bootstrap")
 @limiter.limit("5/minute")
 async def bootstrap(request: Request, payload: dict, db: AsyncSession = Depends(get_db)):
