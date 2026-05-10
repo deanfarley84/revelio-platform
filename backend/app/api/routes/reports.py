@@ -26,6 +26,14 @@ _ROI_PDF_TEMPLATE = """
   @page { size: A4; margin: 22mm 18mm; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #0D0C0A; font-size: 12px; line-height: 1.55; }
+  /* Page-flow controls: keep headings with their content, atomic blocks
+     never split, table rows never split, the CTA section already forces
+     a fresh page via .cta-section in the original CSS. */
+  h1, h2, h3 { page-break-after: avoid; break-after: avoid; }
+  .inaction, .kpi { page-break-inside: avoid; break-inside: avoid; }
+  table { page-break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { page-break-inside: avoid; break-inside: avoid; }
   .header { border-bottom: 2px solid #1A1830; padding-bottom: 12px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end; }
   .brand { font-size: 16px; font-weight: 700; color: #1A1830; letter-spacing: -0.02em; }
   .brand-sub { font-size: 9px; color: #95928A; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
@@ -51,7 +59,7 @@ _ROI_PDF_TEMPLATE = """
   .right { text-align: right; }
   .mono { font-family: monospace; }
   .footer { margin-top: 14px; font-size: 9.5px; color: #95928A; line-height: 1.5; border-top: 1px solid #E8E6E0; padding-top: 9px; }
-  .cta-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid #E8E6E0; }
+  .cta-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid #E8E6E0; page-break-before: always; break-before: page; }
   .cta-pain-narrative { background: #F5F4F1; border-left: 3px solid #1A1830; border-radius: 0 6px 6px 0; padding: 12px 14px; font-size: 11.5px; color: #524F48; line-height: 1.6; margin-bottom: 12px; }
   .cta-subheader { font-size: 11px; color: #524F48; margin-bottom: 5px; }
   .cta-pain-list { list-style: none; padding: 0; margin: 0 0 14px 0; }

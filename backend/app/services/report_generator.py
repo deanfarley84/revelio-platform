@@ -17,6 +17,17 @@ PDF_TEMPLATE = """
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #0D0C0A; font-size: 12px; line-height: 1.6; }
   .page { padding: 48px 52px; max-width: 800px; margin: 0 auto; }
+  /* Page-flow controls: keep headings with their content, atomic blocks
+     never split, table rows never split (but tables may break with the
+     thead repeating), and the CTA section always starts on its own page. */
+  h1, h2, h3 { page-break-after: avoid; break-after: avoid; }
+  .leakage-block, .narrative, .priority-section, .internal-notes, .internal-banner { page-break-inside: avoid; break-inside: avoid; }
+  table { page-break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { page-break-inside: avoid; break-inside: avoid; }
+  .gap-item { page-break-inside: avoid; break-inside: avoid; }
+  .section-break { page-break-before: always; break-before: page; }
+  .cta-section { page-break-before: always; break-before: page; }
   .header { border-bottom: 2px solid #1A1830; padding-bottom: 20px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-end; }
   .brand { font-size: 18px; font-weight: 700; color: #1A1830; letter-spacing: -0.02em; }
   .brand-sub { font-size: 10px; color: #95928A; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
@@ -111,7 +122,7 @@ PDF_TEMPLATE = """
   <div class="narrative">{{ executive_summary }}</div>
 
   {% if primary_drivers %}
-  <h2>Primary leakage drivers</h2>
+  <h2 class="section-break">Primary leakage drivers</h2>
   <table>
     <thead><tr><th>#</th><th>Driver</th><th>Est. impact (low–high)</th><th>Confidence</th><th>Basis</th></tr></thead>
     <tbody>
@@ -129,7 +140,7 @@ PDF_TEMPLATE = """
   {% endif %}
 
   {% if financial_breakdown %}
-  <h2>Financial breakdown by category</h2>
+  <h2 class="section-break">Financial breakdown by category</h2>
   <table>
     <thead><tr><th>Category</th><th>Low estimate</th><th>Mid estimate</th><th>High estimate</th><th>Confidence</th></tr></thead>
     <tbody>
@@ -147,7 +158,7 @@ PDF_TEMPLATE = """
   {% endif %}
 
   {% if fix_priorities %}
-  <h2>Recommended fix priorities</h2>
+  <h2 class="section-break">Recommended fix priorities</h2>
   {% if fix_priorities.immediate %}
   <div class="priority-section">
     <div class="priority-label immediate">Immediate (0–30 days)</div>
