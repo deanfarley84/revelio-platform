@@ -3,10 +3,14 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi import _rate_limit_exceeded_handler
 
 from app.core.config import settings
 from app.core.database import engine, Base, AsyncSessionLocal
 from app.core.middleware import RequestContextMiddleware
+from app.core.rate_limit import limiter
 from app.api.routes import auth, diagnostics, files, admin, benchmarks, intel, reports, notifications
 
 logger = logging.getLogger("revelio")
@@ -81,6 +85,13 @@ app = FastAPI(
     docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
     redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
 )
+
+# slowapi: per-IP rate limiting on hot endpoints. Limiter is in-memory
+# which is fine on single-instance free / Starter plans. Move to Redis
+# storage when we go multi-instance.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(RequestContextMiddleware)
 app.add_middleware(

@@ -2,7 +2,7 @@
 Diagnostics API Routes
 CRUD + submission + approval workflow
 """
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import Optional, List
@@ -11,6 +11,7 @@ import uuid
 
 from app.core.database import get_db, AsyncSessionLocal
 from app.core.auth import get_current_user, require_admin, require_operator
+from app.core.rate_limit import limiter
 from app.models.user import Diagnostic, User, Organisation, AuditLog, Notification
 from app.services.inline_jobs import run_diagnostic_analysis_inline, send_notification_inline
 from app.services.ai_service import classify_confidence
@@ -88,7 +89,9 @@ async def create_diagnostic(
 
 
 @router.post("/{diagnostic_id}/submit")
+@limiter.limit("10/hour")
 async def submit_diagnostic(
+    request: Request,
     diagnostic_id: str,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),

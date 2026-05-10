@@ -1,18 +1,20 @@
 """auth.py — Authentication routes"""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from datetime import datetime, timezone
 
 from app.core.database import get_db
 from app.core.auth import verify_password, create_access_token, hash_password, get_current_user
+from app.core.rate_limit import limiter
 from app.models.user import User, Organisation
 
 router = APIRouter()
 
 
 @router.post("/login")
-async def login(payload: dict, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def login(request: Request, payload: dict, db: AsyncSession = Depends(get_db)):
     # Normalise email so browser autofill that capitalises the first letter
     # does not 401 a legitimate user. Bootstrap and register-org both
     # lowercase on write so this is purely defensive on the read side.
@@ -51,7 +53,8 @@ async def me(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/bootstrap")
-async def bootstrap(payload: dict, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def bootstrap(request: Request, payload: dict, db: AsyncSession = Depends(get_db)):
     """
     Create the first super_admin and an internal Revion organisation.
     Refuses if any super_admin already exists. Used once per fresh deploy
@@ -96,7 +99,8 @@ async def bootstrap(payload: dict, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/register-org")
-async def register_org(payload: dict, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def register_org(request: Request, payload: dict, db: AsyncSession = Depends(get_db)):
     """Register a new organisation and admin user."""
     email = (payload.get("email") or "").strip().lower()
     if not email:
