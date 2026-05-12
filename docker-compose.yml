@@ -5,16 +5,16 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: revelio
-      POSTGRES_USER: revelio
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-revelio_secret}
+      POSTGRES_DB: vyre
+      POSTGRES_USER: vyre
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vyre_secret}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U revelio"]
+      test: ["CMD-SHELL", "pg_isready -U vyre"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -36,13 +36,13 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://revelio:${POSTGRES_PASSWORD:-revelio_secret}@db:5432/revelio
+      DATABASE_URL: postgresql://vyre:${POSTGRES_PASSWORD:-vyre_secret}@db:5432/vyre
       REDIS_URL: redis://redis:6379/0
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-revelio-files}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-vyre-files}
       AWS_REGION: ${AWS_REGION:-eu-west-2}
       ENVIRONMENT: ${ENVIRONMENT:-development}
       CORS_ORIGINS: http://localhost:3000
@@ -63,12 +63,12 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://revelio:${POSTGRES_PASSWORD:-revelio_secret}@db:5432/revelio
+      DATABASE_URL: postgresql://vyre:${POSTGRES_PASSWORD:-vyre_secret}@db:5432/vyre
       REDIS_URL: redis://redis:6379/0
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-revelio-files}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-vyre-files}
       AWS_REGION: ${AWS_REGION:-eu-west-2}
     depends_on:
       db:

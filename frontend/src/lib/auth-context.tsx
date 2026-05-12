@@ -22,21 +22,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
-    const t = localStorage.getItem('revelio_token')
-    const u = localStorage.getItem('revelio_user')
+    const t = localStorage.getItem('vyre_token')
+    const u = localStorage.getItem('vyre_user')
     if (t && u) { setToken(t); setUser(JSON.parse(u)) }
   }, [])
 
   const login = async (email: string, password: string) => {
     const res = await authApi.login(email, password)
     const { access_token, user: u } = res.data
-    localStorage.setItem('revelio_token', access_token)
-    localStorage.setItem('revelio_user', JSON.stringify(u))
+    localStorage.setItem('vyre_token', access_token)
+    localStorage.setItem('vyre_user', JSON.stringify(u))
     setToken(access_token); setUser(u)
   }
 
   const logout = () => {
-    localStorage.removeItem('revelio_token'); localStorage.removeItem('revelio_user')
+    localStorage.removeItem('vyre_token'); localStorage.removeItem('vyre_user')
     setToken(null); setUser(null)
     window.location.href = '/auth/login'
   }

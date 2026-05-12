@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# Revelio Demo Launcher
+# Vyre Demo Launcher
 # Usage: ./demo/start.sh
 # ============================================================
 
@@ -14,7 +14,7 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 echo ""
-echo -e "${BOLD}Revelio — Demo Mode${NC}"
+echo -e "${BOLD}Vyre — Demo Mode${NC}"
 echo "============================================"
 echo ""
 
@@ -51,7 +51,7 @@ docker-compose -f docker-compose.demo.yml down --volumes 2>/dev/null || true
 echo ""
 
 # Build and start
-echo -e "${BLUE}Starting Revelio demo...${NC}"
+echo -e "${BLUE}Starting Vyre demo...${NC}"
 echo "(First build takes 2–3 minutes)"
 echo ""
 
@@ -71,7 +71,7 @@ done
 
 echo ""
 echo "============================================"
-echo -e "${GREEN}${BOLD}Revelio is running!${NC}"
+echo -e "${GREEN}${BOLD}Vyre is running!${NC}"
 echo "============================================"
 echo ""
 echo -e "  ${BOLD}Platform:${NC}  http://localhost:3000"
@@ -80,7 +80,7 @@ echo ""
 echo -e "${BOLD}Demo accounts:${NC}"
 echo ""
 echo -e "  ${BLUE}OPERATOR (Admin)${NC}"
-echo "  admin@revelio.io / Demo1234!"
+echo "  admin@vyre.io / Demo1234!"
 echo ""
 echo -e "  ${GREEN}CLIENT — Acme Retail (Released report)${NC}"
 echo "  james@acmeretail.com / Demo1234!"

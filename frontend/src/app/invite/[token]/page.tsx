@@ -46,8 +46,8 @@ export default function InviteAcceptPage() {
       const { access_token, user } = res.data
       // Mirror what login flow does: persist token + user, redirect to dashboard.
       if (typeof window !== 'undefined') {
-        localStorage.setItem('revelio_token', access_token)
-        localStorage.setItem('revelio_user', JSON.stringify(user))
+        localStorage.setItem('vyre_token', access_token)
+        localStorage.setItem('vyre_user', JSON.stringify(user))
       }
       if (typeof setSession === 'function') setSession({ token: access_token, user })
       router.replace('/dashboard')

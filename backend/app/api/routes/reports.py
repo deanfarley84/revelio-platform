@@ -384,7 +384,7 @@ async def generate_roi_pdf(
     )
 
     pdf_bytes = HTML(string=html_str).write_pdf()
-    filename = f"revelio-roi-{_slug(company)}.pdf"
+    filename = f"vyre-roi-{_slug(company)}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -461,7 +461,7 @@ async def download_export(
         if not content:
             raise HTTPException(404, "Export file not found in storage")
         media_type = "application/pdf" if export.export_type == "pdf" else "text/csv"
-        filename = f"revelio_{export.diagnostic_id}_{export.export_type}.{export.export_type}"
+        filename = f"vyre_{export.diagnostic_id}_{export.export_type}.{export.export_type}"
         return Response(
             content=content,
             media_type=media_type,

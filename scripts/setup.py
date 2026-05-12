@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Revelio — Database seed script. Run after docker-compose up."""
+"""Vyre — Database seed script. Run after docker-compose up."""
 import os, sys, uuid
 import psycopg2
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 
 load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://revelio:revelio_secret@localhost:5432/revelio")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://vyre:vyre_secret@localhost:5432/vyre")
 pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def conn(): return psycopg2.connect(DATABASE_URL)
@@ -30,8 +30,8 @@ def create_demo(db):
     db.commit(); print("  Created demo: james@acmeretail.com / demo1234"); cur.close()
 
 def main():
-    print("\nRevelio Setup"); print("="*40)
-    email = os.getenv("ADMIN_EMAIL", "admin@revelio.io")
+    print("\nVyre Setup"); print("="*40)
+    email = os.getenv("ADMIN_EMAIL", "admin@vyre.io")
     password = os.getenv("ADMIN_PASSWORD", "Admin1234!")
     name = os.getenv("ADMIN_NAME", "Operator Admin")
     try:

@@ -22,7 +22,7 @@ router = APIRouter()
 async def _run_analysis_in_background(diagnostic_id: str) -> None:
     """Spawned via BackgroundTasks. Owns its own DB session."""
     import logging
-    log = logging.getLogger("revelio.bg")
+    log = logging.getLogger("vyre.bg")
     try:
         async with AsyncSessionLocal() as db:
             await run_diagnostic_analysis_inline(db, diagnostic_id)

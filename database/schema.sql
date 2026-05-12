@@ -1,5 +1,5 @@
 -- ============================================================
--- REVELIO: PAYMENTS REVENUE LEAKAGE DIAGNOSTIC PLATFORM
+-- VYRE: PAYMENTS REVENUE LEAKAGE DIAGNOSTIC PLATFORM
 -- PostgreSQL Schema v1.0
 -- ============================================================
 

@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import BenchmarkConfig
 
-logger = logging.getLogger("revelio.seed")
+logger = logging.getLogger("vyre.seed")
 
 
 # Payment-industry baselines. Each row is keyed on (category, key, vertical).

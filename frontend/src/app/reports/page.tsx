@@ -28,7 +28,7 @@ export default function ReportsPage() {
         const url = window.URL.createObjectURL(new Blob([blob.data]))
         const a = document.createElement('a')
         a.href = url
-        a.download = `revelio-${ref}.${type}`
+        a.download = `vyre-${ref}.${type}`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)

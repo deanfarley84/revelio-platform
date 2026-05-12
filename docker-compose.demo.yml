@@ -1,6 +1,6 @@
 version: '3.9'
 
-# REVELIO DEMO MODE — no AWS, local storage, data pre-seeded
+# VYRE DEMO MODE — no AWS, local storage, data pre-seeded
 # Usage: docker-compose -f docker-compose.demo.yml up --build
 
 services:
@@ -8,16 +8,16 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: revelio
-      POSTGRES_USER: revelio
-      POSTGRES_PASSWORD: revelio_demo
+      POSTGRES_DB: vyre
+      POSTGRES_USER: vyre
+      POSTGRES_PASSWORD: vyre_demo
     volumes:
       - demo_postgres:/var/lib/postgresql/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U revelio"]
+      test: ["CMD-SHELL", "pg_isready -U vyre"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -39,7 +39,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://revelio:revelio_demo@db:5432/revelio
+      DATABASE_URL: postgresql://vyre:vyre_demo@db:5432/vyre
       REDIS_URL: redis://redis:6379/0
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       JWT_SECRET: demo-jwt-secret-change-in-production
@@ -71,7 +71,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://revelio:revelio_demo@db:5432/revelio
+      DATABASE_URL: postgresql://vyre:vyre_demo@db:5432/vyre
       REDIS_URL: redis://redis:6379/0
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       JWT_SECRET: demo-jwt-secret-change-in-production

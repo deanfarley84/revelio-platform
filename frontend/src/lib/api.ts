@@ -10,7 +10,7 @@ export const api = axios.create({
 // Attach JWT from localStorage
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('revelio_token')
+    const token = localStorage.getItem('vyre_token')
     if (token) config.headers.Authorization = `Bearer ${token}`
   }
   return config
@@ -21,8 +21,8 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('revelio_token')
-      localStorage.removeItem('revelio_user')
+      localStorage.removeItem('vyre_token')
+      localStorage.removeItem('vyre_user')
       window.location.href = '/auth/login'
     }
     return Promise.reject(err)

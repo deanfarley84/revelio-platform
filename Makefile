@@ -25,7 +25,7 @@ shell-backend:
 	docker-compose exec backend bash
 
 shell-db:
-	docker-compose exec db psql -U revelio -d revelio
+	docker-compose exec db psql -U vyre -d vyre
 
 restart-worker:
 	docker-compose restart worker

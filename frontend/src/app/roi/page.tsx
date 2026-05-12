@@ -110,12 +110,12 @@ export default function RoiPage() {
   // Sticky dismissal: hidden once across browser sessions.
   const [demoBannerDismissed, setDemoBannerDismissed] = useState(() => {
     if (typeof window === 'undefined') return false
-    return window.localStorage.getItem('revion_demo_banner_dismissed') === '1'
+    return window.localStorage.getItem('vyre_demo_banner_dismissed') === '1'
   })
   const dismissDemoBanner = () => {
     setDemoBannerDismissed(true)
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem('revion_demo_banner_dismissed', '1')
+      window.localStorage.setItem('vyre_demo_banner_dismissed', '1')
     }
   }
   const [pdfBusy, setPdfBusy] = useState(false)
@@ -362,7 +362,7 @@ export default function RoiPage() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `revelio-roi-${slug}.pdf`
+      a.download = `vyre-roi-${slug}.pdf`
       document.body.appendChild(a)
       a.click()
       a.remove()

@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # Database
-    DATABASE_URL: str = "postgresql://revelio:revelio_secret@localhost:5432/revelio"
+    DATABASE_URL: str = "postgresql://vyre:vyre_secret@localhost:5432/vyre"
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # AWS S3
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
-    AWS_S3_BUCKET: str = "revelio-files"
+    AWS_S3_BUCKET: str = "vyre-files"
     AWS_REGION: str = "eu-west-2"
 
     # CORS
@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     SMTP_USE_TLS: bool = True
     EMAIL_FROM: str = "no-reply@outturn.io"
     EMAIL_FROM_NAME: str = "Outturn"
-    PUBLIC_APP_URL: str = "https://revelio-frontend-38kb.onrender.com"
+    PUBLIC_APP_URL: str = "https://vyre-frontend-38kb.onrender.com"
 
     model_config = SettingsConfigDict(
         env_file=".env",

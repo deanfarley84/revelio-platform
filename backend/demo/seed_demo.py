@@ -4,7 +4,7 @@ Outturn Demo Seed Script
 Creates realistic demo data for a live demo or client presentation.
 
 Accounts created:
-  ADMIN:   admin@revelio.io        / Demo1234!  (Super Admin)
+  ADMIN:   admin@vyre.io        / Demo1234!  (Super Admin)
   CLIENT1: james@acmeretail.com    / Demo1234!  (Core · Released report)
   CLIENT2: sarah@voltaapp.com      / Demo1234!  (Core · Pending approval)
   CLIENT3: tom@kestrelmarket.io    / Demo1234!  (Enterprise · Processing)
@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import psycopg2
 from passlib.context import CryptContext
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://revelio:revelio_demo@localhost:5432/revelio")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://vyre:vyre_demo@localhost:5432/vyre")
 pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 PW_HASH = pwd.hash("Demo1234!")
 
@@ -199,7 +199,7 @@ def seed(db):
     admin_id = str(uuid.uuid4())
     cur.execute("""
         INSERT INTO users (id, email, full_name, role, password_hash, is_active)
-        VALUES (%s, 'admin@revelio.io', 'Operator Admin', 'super_admin', %s, true)
+        VALUES (%s, 'admin@vyre.io', 'Operator Admin', 'super_admin', %s, true)
     """, (admin_id, PW_HASH))
 
     # ── Client 1: Acme Retail — Core, Released ────────────────────
@@ -469,7 +469,7 @@ def seed(db):
 
     cur.close()
     print("\n  ✓ Demo data ready")
-    print("  Admin:   admin@revelio.io / Demo1234!")
+    print("  Admin:   admin@vyre.io / Demo1234!")
     print("  Client1: james@acmeretail.com / Demo1234! (Core · Released report)")
     print("  Client2: sarah@voltaapp.com / Demo1234! (Core · Pending approval)")
     print("  Client3: tom@kestrelmarket.io / Demo1234! (Enterprise · In review)")

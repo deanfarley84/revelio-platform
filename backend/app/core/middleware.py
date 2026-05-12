@@ -6,7 +6,7 @@ import uuid
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-logger = logging.getLogger("revelio.http")
+logger = logging.getLogger("vyre.http")
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):

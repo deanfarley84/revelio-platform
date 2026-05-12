@@ -13,7 +13,7 @@ from app.core.middleware import RequestContextMiddleware
 from app.core.rate_limit import limiter
 from app.api.routes import auth, diagnostics, files, admin, benchmarks, intel, reports, notifications, invitations
 
-logger = logging.getLogger("revelio")
+logger = logging.getLogger("vyre")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
@@ -52,7 +52,7 @@ async def _init_schema_safely() -> None:
             # because the WHERE clause stops matching after the first run.
             await conn.execute(text(
                 "UPDATE organisations SET name = 'Outturn Operator' "
-                "WHERE name IN ('Revelio Operator', 'Revion Operator')"
+                "WHERE name IN ('Vyre Operator', 'Vyre Operator')"
             ))
         logger.info("Column migrations applied")
     except Exception as e:
@@ -118,7 +118,7 @@ app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["
 @app.get("/health")
 async def health():
     """Liveness probe - returns 200 as long as the process is alive."""
-    return {"status": "ok", "service": "revelio-api"}
+    return {"status": "ok", "service": "vyre-api"}
 
 
 @app.get("/ready")
@@ -136,4 +136,4 @@ async def ready():
 
 @app.get("/")
 async def root():
-    return {"service": "revelio-api", "version": "1.0.0", "status": "ok"}
+    return {"service": "vyre-api", "version": "1.0.0", "status": "ok"}

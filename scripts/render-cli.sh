@@ -15,27 +15,27 @@
 #   redeploy <name|id>           Trigger a manual redeploy
 #   sync                         Trigger a blueprint manual sync
 #   blueprints                   List blueprints
-#   ids                          Cache and print all service IDs (saves to ~/.revelio_render_ids)
+#   ids                          Cache and print all service IDs (saves to ~/.vyre_render_ids)
 #
 # Setup (one-time):
-#   echo "RENDER_API_KEY=rnd_xxx..." > ~/.revelio_render_key
-#   chmod 600 ~/.revelio_render_key
+#   echo "RENDER_API_KEY=rnd_xxx..." > ~/.vyre_render_key
+#   chmod 600 ~/.vyre_render_key
 #
 # Requires: curl, jq
 
 set -euo pipefail
 
-KEY_FILE="$HOME/.revelio_render_key"
-ID_CACHE="$HOME/.revelio_render_ids"
+KEY_FILE="$HOME/.vyre_render_key"
+ID_CACHE="$HOME/.vyre_render_ids"
 BASE="https://api.render.com/v1"
 BLUEPRINT_ID="exs-d7vg8br7uimc73eo0a0g"
 
 # ─── Auth ──────────────────────────────────────────────
 if [ ! -f "$KEY_FILE" ]; then
-  echo "Error: ~/.revelio_render_key not found." >&2
+  echo "Error: ~/.vyre_render_key not found." >&2
   echo "Create it with:" >&2
-  echo "  echo 'RENDER_API_KEY=rnd_yourkey' > ~/.revelio_render_key" >&2
-  echo "  chmod 600 ~/.revelio_render_key" >&2
+  echo "  echo 'RENDER_API_KEY=rnd_yourkey' > ~/.vyre_render_key" >&2
+  echo "  chmod 600 ~/.vyre_render_key" >&2
   exit 1
 fi
 KEY=$(grep '^RENDER_API_KEY=' "$KEY_FILE" | cut -d= -f2-)
@@ -54,7 +54,7 @@ need() {
 need curl
 need jq
 
-# Resolve a service name or ID to an ID. Caches in ~/.revelio_render_ids.
+# Resolve a service name or ID to an ID. Caches in ~/.vyre_render_ids.
 resolve_id() {
   local input="$1"
   # If it already looks like a Render service ID, return as-is

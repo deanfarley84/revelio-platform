@@ -1,7 +1,7 @@
 #!/bin/bash
 # Wipes demo data and restarts with fresh seed
 echo ""
-echo "Resetting Revelio demo (fresh data)..."
+echo "Resetting Vyre demo (fresh data)..."
 docker-compose -f docker-compose.demo.yml down --volumes
 echo "Restarting..."
 ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY docker-compose -f docker-compose.demo.yml up --build -d

@@ -1,25 +1,25 @@
-# ─── Revelio Platform — Render Blueprint ──────────────────
+# ─── Vyre Platform — Render Blueprint ──────────────────
 # Full-stack deploy:
-#   - revelio-frontend  (Next.js, public)
-#   - revelio-backend   (FastAPI, public)
-#   - revelio-worker    (Celery, background)
-#   - revelio-beat      (Celery scheduler, background)
-#   - revelio-db        (managed Postgres)
-#   - revelio-redis     (managed Redis, broker + result backend)
-#   - revelio-shared    (env group with shared secrets)
+#   - vyre-frontend  (Next.js, public)
+#   - vyre-backend   (FastAPI, public)
+#   - vyre-worker    (Celery, background)
+#   - vyre-beat      (Celery scheduler, background)
+#   - vyre-db        (managed Postgres)
+#   - vyre-redis     (managed Redis, broker + result backend)
+#   - vyre-shared    (env group with shared secrets)
 #
 # After first deploy, set these in the Render dashboard:
 #
-#   ENV GROUP "revelio-shared":
+#   ENV GROUP "vyre-shared":
 #     - ANTHROPIC_API_KEY    (production key)
 #     - AWS_ACCESS_KEY_ID    (only if S3 enabled)
 #     - AWS_SECRET_ACCESS_KEY
 #
-#   SERVICE "revelio-backend":
-#     - CORS_ORIGINS         (e.g. ["https://revelio-frontend.onrender.com"])
+#   SERVICE "vyre-backend":
+#     - CORS_ORIGINS         (e.g. ["https://vyre-frontend.onrender.com"])
 #
-#   SERVICE "revelio-frontend":
-#     - NEXT_PUBLIC_API_URL  (e.g. https://revelio-backend.onrender.com)
+#   SERVICE "vyre-frontend":
+#     - NEXT_PUBLIC_API_URL  (e.g. https://vyre-backend.onrender.com)
 #
 # Free tier notes:
 #   - Postgres free tier expires after 90 days; upgrade before then.
@@ -28,7 +28,7 @@
 
 # ─── Shared env group ──────────────────────────────────────
 envVarGroups:
-  - name: revelio-shared
+  - name: vyre-shared
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
@@ -43,27 +43,27 @@ envVarGroups:
       - key: AWS_SECRET_ACCESS_KEY
         sync: false
       - key: AWS_S3_BUCKET
-        value: revelio-files
+        value: vyre-files
       - key: AWS_REGION
         value: eu-west-2
 
 databases:
-  - name: revelio-db
+  - name: vyre-db
     plan: free
-    databaseName: revelio
-    user: revelio
+    databaseName: vyre
+    user: vyre
 
 services:
   # ─── Redis (broker + result backend) ───────────────────
   - type: redis
-    name: revelio-redis
+    name: vyre-redis
     plan: free
     ipAllowList: []   # private network only
     maxmemoryPolicy: allkeys-lru
 
   # ─── Backend API (FastAPI) ─────────────────────────────
   - type: web
-    name: revelio-backend
+    name: vyre-backend
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
@@ -72,7 +72,7 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
-      - fromGroup: revelio-shared
+      - fromGroup: vyre-shared
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
@@ -81,12 +81,12 @@ services:
         value: "8000"
       - key: DATABASE_URL
         fromDatabase:
-          name: revelio-db
+          name: vyre-db
           property: connectionString
       - key: REDIS_URL
         fromService:
           type: redis
-          name: revelio-redis
+          name: vyre-redis
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
@@ -103,7 +103,7 @@ services:
   # To re-enable: uncomment the two worker blocks below and upgrade plan.
   #
   # - type: worker
-  #   name: revelio-worker
+  #   name: vyre-worker
   #   runtime: docker
   #   dockerfilePath: ./backend/Dockerfile
   #   dockerContext: ./backend
@@ -111,26 +111,26 @@ services:
   #   plan: starter
   #   autoDeploy: true
   #   envVars:
-  #     - fromGroup: revelio-shared
+  #     - fromGroup: vyre-shared
   #     - key: ENVIRONMENT
   #       value: production
   #     - key: DATABASE_URL
   #       fromDatabase:
-  #         name: revelio-db
+  #         name: vyre-db
   #         property: connectionString
   #     - key: REDIS_URL
   #       fromService:
   #         type: redis
-  #         name: revelio-redis
+  #         name: vyre-redis
   #         property: connectionString
   #     - key: JWT_SECRET
   #       fromService:
   #         type: web
-  #         name: revelio-backend
+  #         name: vyre-backend
   #         envVarKey: JWT_SECRET
   #
   # - type: worker
-  #   name: revelio-beat
+  #   name: vyre-beat
   #   runtime: docker
   #   dockerfilePath: ./backend/Dockerfile
   #   dockerContext: ./backend
@@ -138,20 +138,20 @@ services:
   #   plan: starter
   #   autoDeploy: true
   #   envVars:
-  #     - fromGroup: revelio-shared
+  #     - fromGroup: vyre-shared
   #     - key: DATABASE_URL
   #       fromDatabase:
-  #         name: revelio-db
+  #         name: vyre-db
   #         property: connectionString
   #     - key: REDIS_URL
   #       fromService:
   #         type: redis
-  #         name: revelio-redis
+  #         name: vyre-redis
   #         property: connectionString
 
   # ─── Frontend (Next.js) ────────────────────────────────
   - type: web
-    name: revelio-frontend
+    name: vyre-frontend
     runtime: docker
     dockerfilePath: ./frontend/Dockerfile
     dockerContext: ./frontend
@@ -164,4 +164,4 @@ services:
       - key: PORT
         value: "3000"
       - key: NEXT_PUBLIC_API_URL
-        sync: false   # set after backend deploys → https://revelio-backend.onrender.com
+        sync: false   # set after backend deploys → https://vyre-backend.onrender.com

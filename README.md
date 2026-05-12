@@ -1,4 +1,4 @@
-# Revelio - Payments Revenue Leakage Diagnostic Platform
+# Vyre - Payments Revenue Leakage Diagnostic Platform
 
 Multi-tenant SaaS platform for identifying hidden revenue loss in payment infrastructure. Powered by Claude AI.
 
@@ -22,7 +22,7 @@ docker compose -f docker-compose.demo.yml exec backend python demo/seed_demo.py
 open http://localhost:3000
 ```
 
-**Admin login:** `admin@revelio.io` / `Demo1234!`
+**Admin login:** `admin@vyre.io` / `Demo1234!`
 **Demo client:** `james@acmeretail.com` / `Demo1234!`
 
 ## Production / fresh-deploy bootstrap
@@ -85,7 +85,7 @@ Subsequent calls return 409. After this, log in via the UI normally.
 ## Structure
 
 ```
-revelio/
+vyre/
 ├── backend/app/
 │   ├── main.py               FastAPI app
 │   ├── core/                 Config, DB, auth

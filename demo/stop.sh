@@ -1,6 +1,6 @@
 #!/bin/bash
 echo ""
-echo "Stopping Revelio demo..."
+echo "Stopping Vyre demo..."
 docker-compose -f docker-compose.demo.yml down
 echo ""
 echo "Demo stopped. All demo data removed."

@@ -1,7 +1,7 @@
 # Status as of 2026-05-09 19:16 (end of 3-hour autonomous session)
 
 ## TL;DR
-Bug-fix and feature work pushed in commit [`71a49c5`](https://github.com/deanfarley84/revelio-platform/commit/71a49c5). Render autodeploy should pick it up. **I still cannot verify deploy status** because no Render API key is on this machine. If logs show a remaining failure, drop the key in `~/.revelio_render_key` and I can read them next session.
+Bug-fix and feature work pushed in commit [`71a49c5`](https://github.com/deanfarley84/vyre-platform/commit/71a49c5). Render autodeploy should pick it up. **I still cannot verify deploy status** because no Render API key is on this machine. If logs show a remaining failure, drop the key in `~/.vyre_render_key` and I can read them next session.
 
 **One thing to watch:** my earlier push (`aae6a3e`) was rewritten to drop the code changes, leaving only the Trixie/`.gitkeep` Dockerfile fixes. I caught that, recommitted everything as `71a49c5`, and verified the diff. If you have an autocommit hook that's rewriting commits, it stripped 25 files of work the first time round.
 
@@ -68,7 +68,7 @@ If (4) and (3) were the only issues, the previous deploy may have already been h
 
 ## Next decisions needed from Dean
 
-1. **Drop a Render API key** at `~/.revelio_render_key` so I can read deploy logs next session.
+1. **Drop a Render API key** at `~/.vyre_render_key` so I can read deploy logs next session.
 2. **Once a backend URL is confirmed live**, hit `POST /auth/bootstrap` to create your super_admin, then set `CORS_ORIGINS` and `NEXT_PUBLIC_API_URL` env vars (you can do these via `./scripts/render-cli.sh set-env ...` once the key is present).
 3. **Production `ANTHROPIC_API_KEY`** still required before any client can submit a real diagnostic. Placeholder is fine for boot.
 4. **S3 keys** are *not* required - storage now auto-falls back to local. Files won't survive a dyno restart on free tier, but that's acceptable for early demos.

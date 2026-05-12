@@ -27,7 +27,7 @@ export default function ResultsDetailPage() {
         if (exp) {
           const blob = await reportsApi.download(id, exp.id)
           const url = window.URL.createObjectURL(new Blob([blob.data]))
-          const a = document.createElement('a'); a.href=url; a.download=`revelio-${diag?.reference}.${type}`; a.click()
+          const a = document.createElement('a'); a.href=url; a.download=`vyre-${diag?.reference}.${type}`; a.click()
           window.URL.revokeObjectURL(url)
         }
         setGenerating(false)

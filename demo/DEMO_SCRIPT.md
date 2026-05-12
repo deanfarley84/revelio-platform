@@ -1,4 +1,4 @@
-# Revelio — Demo Script
+# Vyre — Demo Script
 ## Payments Revenue Leakage Diagnostic Platform
 
 **Duration:** 15–20 minutes  
@@ -9,7 +9,7 @@
 
 ## Before you start
 
-1. Run `./demo/start.sh` — wait until terminal shows "Revelio is running"
+1. Run `./demo/start.sh` — wait until terminal shows "Vyre is running"
 2. Open `http://localhost:3000` in a clean browser window
 3. Have a second tab ready with `http://localhost:3000` for the admin view
 4. Keep this script open on a second screen
@@ -20,7 +20,7 @@
 
 **Say:**  
 > "Most businesses have no idea how much revenue they're losing inside their payment stack. Not from fraud, not from pricing — from the infrastructure itself. Auth rates, retry logic, routing, FX spread, chargeback handling. The average e-commerce business loses 2–6% of revenue here, silently.  
-> Revelio is a diagnostic engine that surfaces exactly that — with financial estimates, prioritised fixes, and a report you can put in front of a CFO."
+> Vyre is a diagnostic engine that surfaces exactly that — with financial estimates, prioritised fixes, and a report you can put in front of a CFO."
 
 ---
 
@@ -78,7 +78,7 @@ Click the drop zone — show it accepts CSV, XLSX, PDF
 
 **Switch to Admin mode** — click "Admin" in the mode toggle in the sidebar
 
-OR open a new tab and log in as: `admin@revelio.io` / `Demo1234!`
+OR open a new tab and log in as: `admin@vyre.io` / `Demo1234!`
 
 ### 3.1 — Command centre
 
@@ -196,4 +196,4 @@ Click "Approval queue" → scroll to GreenMile
 
 ---
 
-*Revelio — Payments Revenue Leakage Diagnostic Platform*
+*Vyre — Payments Revenue Leakage Diagnostic Platform*

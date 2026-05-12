@@ -21,7 +21,7 @@ def use_local() -> bool:
 
 
 def _local_path(key: str) -> Path:
-    base = Path(os.getenv("LOCAL_STORAGE_PATH", "/tmp/revelio_files"))
+    base = Path(os.getenv("LOCAL_STORAGE_PATH", "/tmp/vyre_files"))
     full = base / key.lstrip("/")
     full.parent.mkdir(parents=True, exist_ok=True)
     return full

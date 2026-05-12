@@ -1,4 +1,4 @@
-# REVELIO — TEST MODE AND DEMO SANDBOX BRIEF
+# VYRE — TEST MODE AND DEMO SANDBOX BRIEF
 
 **Last updated:** 2026-05-09
 **Status:** Phase 1 ready to build next session. Phase 2 deferred until client #1 signs.
@@ -7,13 +7,13 @@
 
 The platform is live at:
 
-- Frontend: https://revelio-frontend-38kb.onrender.com
-- Backend: https://revelio-backend-r8u3.onrender.com
-- Repo: https://github.com/deanfarley84/revelio-platform (main, SSH-authed)
-- Working dir: `/Users/deanfarley/Code/revelio-platform/revelio`
-- Helper: `./scripts/render-cli.sh` reads `~/.revelio_render_key`
+- Frontend: https://vyre-frontend-38kb.onrender.com
+- Backend: https://vyre-backend-r8u3.onrender.com
+- Repo: https://github.com/deanfarley84/vyre-platform (main, SSH-authed)
+- Working dir: `/Users/deanfarley/Code/vyre-platform/vyre`
+- Helper: `./scripts/render-cli.sh` reads `~/.vyre_render_key`
 
-Currently the database has exactly one user (`deanfarley84@gmail.com`, super_admin in the "Revelio Operator" org). Every list view is empty. The ROI calculator runs in its baked-in demo state because there are no released diagnostics.
+Currently the database has exactly one user (`deanfarley84@gmail.com`, super_admin in the "Vyre Operator" org). Every list view is empty. The ROI calculator runs in its baked-in demo state because there are no released diagnostics.
 
 This brief covers two phases of test/demo capability. Phase 1 is mechanical seeding for now; Phase 2 is a public sandbox for prospects, only worth building once a paying client exists.
 
@@ -138,7 +138,7 @@ Single deployment, no second instance. Add a public guest route plus a scheduled
 - **Auto-login:** clicking either button calls a backend `POST /auth/demo-token` that returns a short-lived JWT scoped to a frozen demo org with `read_only=true` enforced server-side.
 - **Permissions:** `demo_viewer` and `demo_operator` roles, both read-only. They can navigate, read every page, but every write endpoint returns 403.
 - **Reseed:** a `POST /admin/seed-demo-sandbox` endpoint, called from a Render cron job nightly at 02:00 UTC. Wipes the sandbox org and reseeds it with fresh demo data. Keeps it clean between prospects.
-- **Visual identity:** the sandbox org is named "Try Revelio (sandbox)" and shows a persistent banner: `Sandbox mode, read-only. Real platform at revelio.io.`
+- **Visual identity:** the sandbox org is named "Try Vyre (sandbox)" and shows a persistent banner: `Sandbox mode, read-only. Real platform at vyre.io.`
 
 ### Tasks (do later)
 
@@ -147,7 +147,7 @@ Single deployment, no second instance. Add a public guest route plus a scheduled
 3. `POST /auth/demo-token` minting short-lived (15 min) JWTs for `demo_viewer` / `demo_operator`.
 4. Frontend `/demo` route with the two CTAs and the persistent sandbox banner once logged in.
 5. Render cron job that hits the reseed endpoint nightly.
-6. Decision: bind the sandbox to `revelio.io/demo` once domain lands, or keep on `revelio-frontend-38kb.onrender.com/demo`.
+6. Decision: bind the sandbox to `vyre.io/demo` once domain lands, or keep on `vyre-frontend-38kb.onrender.com/demo`.
 
 ### Effort
 

@@ -1,14 +1,14 @@
-# REVELIO PLATFORM — CLAUDE CODE HANDOFF
+# VYRE PLATFORM — CLAUDE CODE HANDOFF
 
 **Date:** 2026-05-09
 **Operator:** Dean Farley (deanfarley84)
-**Working directory:** `/Users/deanfarley/Code/revelio-platform/revelio`
-**GitHub:** https://github.com/deanfarley84/revelio-platform (private, SSH-authed)
+**Working directory:** `/Users/deanfarley/Code/vyre-platform/vyre`
+**GitHub:** https://github.com/deanfarley84/vyre-platform (private, SSH-authed)
 **Render:** Blueprint deployed, currently failing — blocker is missing Render API key for diagnostics
 
 ---
 
-## CONTEXT: WHAT REVELIO IS
+## CONTEXT: WHAT VYRE IS
 
 Multi-tenant SaaS: Payments Revenue Leakage Diagnostic Platform. Merchants submit payment data, AI (Claude Sonnet) analyses it, operator reviews, client receives report. Three tiers (Lite/Core/Enterprise). Built originally in a separate Claude chat session.
 
@@ -38,26 +38,26 @@ Multi-tenant SaaS: Payments Revenue Leakage Diagnostic Platform. Merchants submi
 ### Render Blueprint
 - URL: https://dashboard.render.com/blueprint/exs-d7vg8br7uimc73eo0a0g
 - Resources created successfully:
-  - ✅ Env group `revelio-shared`
-  - ✅ Database `revelio-db` (Postgres, free tier — expires 90 days)
-  - ✅ Key Value `revelio-redis` (Redis, free tier, currently unused)
+  - ✅ Env group `vyre-shared`
+  - ✅ Database `vyre-db` (Postgres, free tier — expires 90 days)
+  - ✅ Key Value `vyre-redis` (Redis, free tier, currently unused)
 - Resources failing or missing:
-  - ❌ `revelio-backend` (web service) — deploy failed, root cause unknown
-  - ❌ `revelio-frontend` (web service) — deploy failed, root cause unknown
-  - ⚠️ `revelio-worker` and `revelio-beat` — REMOVED from render.yaml (free tier doesn't support workers; jobs now run inline)
+  - ❌ `vyre-backend` (web service) — deploy failed, root cause unknown
+  - ❌ `vyre-frontend` (web service) — deploy failed, root cause unknown
+  - ⚠️ `vyre-worker` and `vyre-beat` — REMOVED from render.yaml (free tier doesn't support workers; jobs now run inline)
 
 ### Last user-side action
 Manual sync triggered, returned "Resources already up to date". Latest commit `d071344` is on GitHub but unclear whether Render auto-deployed the backend/frontend with the new code. **The actual deploy logs were never read** — that's the immediate blocker.
 
 ### Pending env vars (sync: false in render.yaml)
 Set these in Render dashboard once you have working URLs:
-- `revelio-shared` env group:
+- `vyre-shared` env group:
   - `ANTHROPIC_API_KEY` — production Anthropic key (Dean said use placeholder for now; he'll add it)
   - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` — only if S3 enabled (not needed for first deploy)
-- `revelio-backend`:
-  - `CORS_ORIGINS` — set to `["https://revelio-frontend.onrender.com"]` (or actual frontend URL after deploy)
-- `revelio-frontend`:
-  - `NEXT_PUBLIC_API_URL` — set to `https://revelio-backend.onrender.com` (or actual backend URL)
+- `vyre-backend`:
+  - `CORS_ORIGINS` — set to `["https://vyre-frontend.onrender.com"]` (or actual frontend URL after deploy)
+- `vyre-frontend`:
+  - `NEXT_PUBLIC_API_URL` — set to `https://vyre-backend.onrender.com` (or actual backend URL)
 
 ---
 
@@ -78,16 +78,16 @@ Set these in Render dashboard once you have working URLs:
 ### Step 1: Get a Render API key
 Dean is leaving and may or may not paste an API key. Check the chat history for a string starting with `rnd_`. If present, use it. If not, you cannot drive Render's API — proceed to Step 4 (do what you can locally) and leave a clear status note.
 
-If you have the key, store it in `~/.revelio_render_key` (chmod 600) so it's not committed:
+If you have the key, store it in `~/.vyre_render_key` (chmod 600) so it's not committed:
 ```bash
-chmod 600 ~/.revelio_render_key
-echo "RENDER_API_KEY=rnd_..." > ~/.revelio_render_key
+chmod 600 ~/.vyre_render_key
+echo "RENDER_API_KEY=rnd_..." > ~/.vyre_render_key
 ```
 
 ### Step 2: Get deploy logs via Render API
 
 ```bash
-RENDER_KEY=$(grep RENDER_API_KEY ~/.revelio_render_key | cut -d= -f2)
+RENDER_KEY=$(grep RENDER_API_KEY ~/.vyre_render_key | cut -d= -f2)
 
 # List services to get IDs
 curl -s -H "Authorization: Bearer $RENDER_KEY" \
@@ -119,7 +119,7 @@ Common likely causes for backend deploy failure:
 
 If the diagnosis points to a code fix:
 ```bash
-cd /Users/deanfarley/Code/revelio-platform/revelio
+cd /Users/deanfarley/Code/vyre-platform/vyre
 # edit files
 git add .
 git commit -m "Fix: <what>"
@@ -145,13 +145,13 @@ curl -X POST -H "Authorization: Bearer $RENDER_KEY" \
 curl -X PUT -H "Authorization: Bearer $RENDER_KEY" \
   "https://api.render.com/v1/services/BACKEND_SRV_ID/env-vars" \
   -H "Content-Type: application/json" \
-  -d '[{"key":"CORS_ORIGINS","value":"[\"https://revelio-frontend.onrender.com\"]"}]'
+  -d '[{"key":"CORS_ORIGINS","value":"[\"https://vyre-frontend.onrender.com\"]"}]'
 
 # Update NEXT_PUBLIC_API_URL on frontend
 curl -X PUT -H "Authorization: Bearer $RENDER_KEY" \
   "https://api.render.com/v1/services/FRONTEND_SRV_ID/env-vars" \
   -H "Content-Type: application/json" \
-  -d '[{"key":"NEXT_PUBLIC_API_URL","value":"https://revelio-backend.onrender.com"}]'
+  -d '[{"key":"NEXT_PUBLIC_API_URL","value":"https://vyre-backend.onrender.com"}]'
 ```
 
 ---
@@ -159,7 +159,7 @@ curl -X PUT -H "Authorization: Bearer $RENDER_KEY" \
 ## FILE STRUCTURE OVERVIEW
 
 ```
-/Users/deanfarley/Code/revelio-platform/revelio/
+/Users/deanfarley/Code/vyre-platform/vyre/
 ├── render.yaml                 # Render blueprint (services, db, redis, env group)
 ├── docker-compose.demo.yml     # Local demo via Docker
 ├── .gitignore
@@ -263,7 +263,7 @@ Backend's `CORS_ORIGINS` is empty until set. Frontend will hit CORS errors on AP
 
 ## DEMO CREDENTIALS (for local demo, not relevant to Render deploy)
 
-- Admin: `admin@revelio.io` / `Demo1234!`
+- Admin: `admin@vyre.io` / `Demo1234!`
 - Demo client: `james@acmeretail.com` / `Demo1234!`
 - All demo passwords: `Demo1234!`
 
@@ -290,7 +290,7 @@ But: don't auto-seed prod. Only seed if Dean specifically asks.
 
 ## STATUS REPORT FORMAT (LEAVE THIS WHEN DONE)
 
-When Dean returns, leave a `HANDOFF_STATUS.md` in `/Users/deanfarley/Code/revelio-platform/revelio/` with:
+When Dean returns, leave a `HANDOFF_STATUS.md` in `/Users/deanfarley/Code/vyre-platform/vyre/` with:
 
 ```markdown
 # Status as of <timestamp>
