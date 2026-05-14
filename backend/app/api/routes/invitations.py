@@ -112,9 +112,9 @@ async def create_invitation(
     accept_url = _accept_url(token)
     email_status = await send_email(
         to=email,
-        subject=f"You have been invited to {org.name} on Outturn",
+        subject=f"You have been invited to {org.name} on Vyre",
         body_text=(
-            f"{current_user.full_name} has invited you to join {org.name} on Outturn.\n\n"
+            f"{current_user.full_name} has invited you to join {org.name} on Vyre.\n\n"
             f"Accept the invitation and set your password here:\n{accept_url}\n\n"
             f"This link expires in {_INVITE_TTL_DAYS} days. If you did not expect this email "
             "you can safely ignore it."

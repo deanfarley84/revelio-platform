@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Outturn Demo Seed Script
+Vyre Demo Seed Script
 Creates realistic demo data for a live demo or client presentation.
 
 Accounts created:
@@ -477,7 +477,7 @@ def seed(db):
 
 
 if __name__ == "__main__":
-    print("\nOutturn Demo Seed")
+    print("\nVyre Demo Seed")
     print("=" * 40)
     try:
         db = conn()

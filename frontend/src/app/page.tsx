@@ -24,7 +24,7 @@ export default function RootPage() {
             <polygon points="7,1 13,4.5 13,9.5 7,13 1,9.5 1,4.5"/>
           </svg>
         </div>
-        <span style={{ fontSize: '14px', color: '#95928A' }}>Loading OUTTURN...</span>
+        <span style={{ fontSize: '14px', color: '#95928A' }}>Loading VYRE...</span>
       </div>
     </div>
   )

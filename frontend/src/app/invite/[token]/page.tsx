@@ -61,7 +61,7 @@ export default function InviteAcceptPage() {
     <div style={{ minHeight: '100vh', background: '#FAF9F5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ maxWidth: 460, width: '100%', background: 'white', borderRadius: 12, padding: 32, boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
         <div style={{ marginBottom: 18 }}>
-          <span style={{ fontSize: 18, fontWeight: 600, color: '#1A1830', fontFamily: 'DM Sans, sans-serif' }}>OUTTURN</span>
+          <span style={{ fontSize: 18, fontWeight: 600, color: '#1A1830', fontFamily: 'DM Sans, sans-serif' }}>VYRE</span>
           <p style={{ fontSize: 12, color: '#95928A', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans, sans-serif', marginTop: 4 }}>Revenue Leakage Diagnostics</p>
         </div>
 

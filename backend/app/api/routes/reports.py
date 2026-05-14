@@ -85,7 +85,7 @@ _ROI_PDF_TEMPLATE = """
 <body>
   <div class="header">
     <div>
-      <div class="brand">OUTTURN</div>
+      <div class="brand">VYRE</div>
       <div class="brand-sub">Revenue Leakage Diagnostics</div>
     </div>
     <div class="ref">
@@ -206,7 +206,7 @@ _ROI_PDF_TEMPLATE = """
       {% endif %}
       {% if cost_overlay.advisory_fee is not none %}
       <tr>
-        <td>Outturn advisory</td>
+        <td>Vyre advisory</td>
         <td>One-off engagement fee</td>
         <td class="right mono">{{ fmt(cost_overlay.advisory_fee) }}</td>
       </tr>
@@ -229,10 +229,10 @@ _ROI_PDF_TEMPLATE = """
       <li>A creeping sense that the stack has not had an honest, independent review in years.</li>
     </ul>
 
-    <h2>What Outturn delivers</h2>
+    <h2>What Vyre delivers</h2>
     <div class="cta-outcome cta-outcome-zero">
       <div class="cta-outcome-label">No fee for diagnosis or visibility</div>
-      <div class="cta-outcome-body">The diagnostic and ongoing visibility into your payments stack carry no fee. Outturn only monetises on a small percentage of realised revenue recovery, paid once the strategy is live and the savings are validated. NDA and exclusivity during the engagement; you retain final approval on every recommendation.</div>
+      <div class="cta-outcome-body">The diagnostic and ongoing visibility into your payments stack carry no fee. Vyre only monetises on a small percentage of realised revenue recovery, paid once the strategy is live and the savings are validated. NDA and exclusivity during the engagement; you retain final approval on every recommendation.</div>
     </div>
     <div class="cta-outcome">
       <div class="cta-outcome-label">Provider-agnostic by design</div>
@@ -259,11 +259,11 @@ _ROI_PDF_TEMPLATE = """
     </div>
 
     <div class="cta-positioning">
-      Outturn identifies where commercial leakage exists at no cost. We only monetise when deeper optimisation, execution, or realised recovery is required.
+      Vyre identifies where commercial leakage exists at no cost. We only monetise when deeper optimisation, execution, or realised recovery is required.
     </div>
 
     <div class="cta-block">
-      <div class="cta-headline">Next step: speak with Outturn</div>
+      <div class="cta-headline">Next step: speak with Vyre</div>
       <div class="cta-body">A 30-minute conversation with Dean Farley, founder. We take away the pain of building a new payments strategy and connect you with the right partners for maximum optimisation. Independent, provider-agnostic, focused on outcomes you can defend at board level.</div>
       <div class="cta-contact-row"><span class="cta-contact-label">Email</span> deanfarley84@gmail.com</div>
       <div class="cta-contact-row"><span class="cta-contact-label">UK</span> +44 (0) 7583 002 267</div>

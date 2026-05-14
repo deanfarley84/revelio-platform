@@ -44,7 +44,7 @@ export default function LoginPage() {
                 <line x1="13" y1="4.5" x2="1" y2="9.5"/>
               </svg>
             </div>
-            <span style={{ fontSize:'18px', fontWeight:600, color:'#1A1830', fontFamily:'DM Sans, sans-serif' }}>OUTTURN</span>
+            <span style={{ fontSize:'18px', fontWeight:600, color:'#1A1830', fontFamily:'DM Sans, sans-serif' }}>VYRE</span>
           </div>
           <p style={{ fontSize:'12px', color:'#95928A', letterSpacing:'0.06em', textTransform:'uppercase', fontFamily:'DM Sans, sans-serif' }}>Revenue Leakage Diagnostics</p>
         </div>

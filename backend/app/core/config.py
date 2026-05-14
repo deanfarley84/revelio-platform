@@ -43,8 +43,8 @@ class Settings(BaseSettings):
     SMTP_USERNAME: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_USE_TLS: bool = True
-    EMAIL_FROM: str = "no-reply@outturn.io"
-    EMAIL_FROM_NAME: str = "Outturn"
+    EMAIL_FROM: str = "no-reply@vyre.io"
+    EMAIL_FROM_NAME: str = "Vyre"
     PUBLIC_APP_URL: str = "https://vyre-frontend-38kb.onrender.com"
 
     model_config = SettingsConfigDict(

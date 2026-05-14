@@ -47,12 +47,12 @@ async def _init_schema_safely() -> None:
             await conn.execute(text(
                 "ALTER TABLE diagnostics ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT FALSE"
             ))
-            # Brand alignment: rename the original bootstrap org through
-            # any of its previous names to "Outturn Operator". Idempotent
-            # because the WHERE clause stops matching after the first run.
+            # Brand alignment: collapse any of the previous working names
+            # on the bootstrap org into "Vyre Operator". Idempotent because
+            # the WHERE clause stops matching after the first run.
             await conn.execute(text(
-                "UPDATE organisations SET name = 'Outturn Operator' "
-                "WHERE name IN ('Vyre Operator', 'Vyre Operator')"
+                "UPDATE organisations SET name = 'Vyre Operator' "
+                "WHERE name IN ('Revelio Operator', 'Revion Operator', 'Vyre Operator')"
             ))
         logger.info("Column migrations applied")
     except Exception as e:
@@ -70,16 +70,16 @@ async def _init_schema_safely() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Outturn API starting in %s mode", settings.ENVIRONMENT)
+    logger.info("Vyre API starting in %s mode", settings.ENVIRONMENT)
     # Fire-and-forget so the health check passes immediately and Render
     # doesn't kill the boot waiting on Postgres.
     asyncio.create_task(_init_schema_safely())
     yield
-    logger.info("Outturn API shutting down")
+    logger.info("Vyre API shutting down")
 
 
 app = FastAPI(
-    title="Outturn API",
+    title="Vyre API",
     description="Payments Revenue Leakage Diagnostic Platform",
     version="1.0.0",
     lifespan=lifespan,

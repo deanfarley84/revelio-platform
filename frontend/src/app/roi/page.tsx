@@ -298,7 +298,7 @@ export default function RoiPage() {
 
   const copySummary = async () => {
     const lines = [
-      `Outturn ROI Summary${companyName ? ` — ${companyName}` : ''}`,
+      `Vyre ROI Summary${companyName ? ` — ${companyName}` : ''}`,
       `Timeframe: ${timeframeMonths} months`,
       ``,
       `Recoverable revenue (period): ${fmtCurrency(totals.periodRecoverable)}`,
@@ -510,7 +510,7 @@ export default function RoiPage() {
                 </div>
                 {!totals.hasAnyCost && (
                   <div className="text-[12.5px] text-ink/70 leading-relaxed mt-2 pt-2 border-t border-ink/10">
-                    Speak to a Outturn Strategic AE who is provider-agnostic, with the integrity and expertise to map your leakage end to end, build a strategy that works for you and not the providers, and connect you with the right partner of choice.
+                    Speak to a Vyre Strategic AE who is provider-agnostic, with the integrity and expertise to map your leakage end to end, build a strategy that works for you and not the providers, and connect you with the right partner of choice.
                   </div>
                 )}
               </div>
@@ -636,7 +636,7 @@ export default function RoiPage() {
             {advisoryFee !== null && (
               <div className="card py-3">
                 <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="section-title text-[12.5px]">Outturn advisory, one-off</div>
+                  <div className="section-title text-[12.5px]">Vyre advisory, one-off</div>
                   <button
                     onClick={() => setAdvisoryFee(null)}
                     className="text-ink/30 hover:text-brand-red transition-colors"
